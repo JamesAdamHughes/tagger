@@ -16,8 +16,9 @@ func StartServer() {
 	http.HandleFunc("/", handlers.IndexHandler)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/callback", handlers.CompleteAuthHandler)
+	http.HandleFunc("/playlist", handlers.PlaylistHandler)
 
-	http.HandleFunc("/api/user/playlists", handlers.ApiPlaylistHandlers)
+	http.HandleFunc("/api/user/playlist", handlers.ApiPlaylistHandler)
 	http.HandleFunc("/api/user", handlers.ApiGetUser)
 
 	http.ListenAndServe(":8080", nil)

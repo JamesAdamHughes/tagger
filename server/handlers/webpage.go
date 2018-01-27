@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"net/http"
 	"tagger/server/spotify"
+	"tagger/server/cookies"
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	client := GetClientFromCookies(r)
+	client := cookies.GetClientFromCookies(r)
 
 	if client != nil {
-		user, _ := client.CurrentUser()
-		fmt.Printf("User is logged in as %d\n", user.ID)
 		page, _ := LoadPage("index_authed")
 		fmt.Fprint(w, page.Body)
 	} else {
 		fmt.Println("User is anonymous")
 		RenderTemplate(w, "index_anon", Page{})
 	}
+}
 
+func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
+	client := cookies.GetClientFromCookies(r)
+	if client != nil {
+		page, _ := LoadPage("playlist")
+		fmt.Fprint(w, page.Body)
+	} else {
+		RenderTemplate(w, "not_authed", Page{})
+	}
 }
 
 func CompleteAuthHandler(w http.ResponseWriter, r *http.Request){

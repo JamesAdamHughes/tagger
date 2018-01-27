@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"fmt"
 	"html/template"
-	"golang.org/x/oauth2"
-	"tagger/server/spotify"
-	"github.com/zmb3/spotify"
 	"io/ioutil"
 )
 
@@ -42,20 +39,6 @@ func MissingPageHandler(w http.ResponseWriter, filename string) {
 		Title: "File Not Found",
 		Body: filename,
 	})
-}
-
-func GetClientFromCookies(r *http.Request) *spotify.Client {
-	c, _ := r.Cookie("authTokenTMP")
-	if c != nil {
-		fmt.Printf("%+v", c)
-
-		// get user if possible
-		client := spotify_manager.GetClient(&oauth2.Token{
-			AccessToken: c.Value,
-		})
-		return client
-	}
-	return nil
 }
 
 func LoadPage(title string) (*Page, error) {

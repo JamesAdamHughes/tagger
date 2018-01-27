@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Playlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
+</head>
+<body>
+<div id="app">
+    <div>
+
+    </div>
+    {{User.display_name}}
+    <br/>
+    {{Message}}
+    {{Playlist.name}}
+
+    <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
+        <md-subheader>Tracks</md-subheader>
+
+        <md-list-item v-for="track in Playlist.tracks.items">
+            <md-icon class="md-primary">music_video</md-icon>
+
+
+
+            <track-item v-bind:track="track.track" class="md-list-item-text"></track-item>
+
+        </md-list-item>
+
+    </md-list>
+    <ol v-if="Playlist.tracks != undefined">
+
+    </ol>
+</div>
+<script src="https://unpkg.com/vue"></script>
+<script src="https://unpkg.com/vue-material@beta"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
+
+<script>
+    Vue.use(VueMaterial.default);
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            User: [],
+            Playlist: [],
+            Message: "Loading"
+        },
+        mounted: function() {
+            var self = this;
+
+            var urlParams = new URLSearchParams(window.location.search);
+            this.$http.get('/api/user/playlist?id=' + urlParams.get('id')).then(function(response) {
+                console.log(response);
+                // get body data
+                if (response.body.OK !== true) {
+                    this.Message = "Can't load playlist - " + response.body.Message;
+                } else {
+                    this.Playlist = response.body.Playlist;
+                    this.Message = "";
+                }
+            });
+
+            this.$http.get('/api/user').then(function(response) {
+                console.log(response);
+                // get body data
+                this.User = response.body.User;
+            });
+        }
+    });
+
+    Vue.component('track-item', {
+        props: ['track'],
+        template: '<div class="md-list-item-text"><span>{{track.name}}</span><span>{{artist}}</span></div>',
+        computed: {
+            artist : function() {
+                artists = "";
+                this.track.artists.forEach(function(artist){
+                    artists += artist.name + ", "
+                });
+
+                return artists.slice(0, -2)
+            }
+        }
+    })
+</script>
+</body>
+</html>
