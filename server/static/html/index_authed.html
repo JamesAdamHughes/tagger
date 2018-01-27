@@ -12,9 +12,7 @@
 {{message}}
 {{User.display_name}}
 
-    <p v-for="playlist in Playlists">
-        {{playlist.name}}
-    </p>
+<playlist-item v-for="playlist in Playlists" v-bind:playlist="playlist"></playlist-item>
 
 </div>
 </body>
@@ -44,6 +42,16 @@
                 this.User = response.body.User;
 
             });
+        }
+    });
+
+    Vue.component('playlist-item', {
+        props: ['playlist'],
+        template: '<div><h1><a v-bind:href=url>{{playlist.name}}</a></h1></div>',
+        computed: {
+            url: function() {
+                return '/playlist/' + this.playlist.id;
+            }
         }
     })
 </script>

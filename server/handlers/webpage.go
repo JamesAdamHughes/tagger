@@ -7,24 +7,15 @@ import (
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-
 	client := GetClientFromCookies(r)
-	if client != nil {
-		//user, err := client.CurrentUser()
-		//if err != nil{
-		//	fmt.Fprintf(w, "Can't find due to %s", err.Error())
-		//}
 
-		//playlists, _ := client.CurrentUsersPlaylists()
-		//for _, playlist := range playlists.Playlists {
-		//	fmt.Printf("\n%+v\n", playlist.Name)
-		//}
-		//fmt.Printf("in loaded client")
+	if client != nil {
+		user, _ := client.CurrentUser()
+		fmt.Printf("User is logged in as %d\n", user.ID)
 		page, _ := LoadPage("index_authed")
 		fmt.Fprint(w, page.Body)
-
-		//RenderTemplate(w, "index_authed", user)
 	} else {
+		fmt.Println("User is anonymous")
 		RenderTemplate(w, "index_anon", Page{})
 	}
 
@@ -37,6 +28,7 @@ func CompleteAuthHandler(w http.ResponseWriter, r *http.Request){
 		RenderTemplate(w, "Error in auth", Page{})
 	}
 
+	// Set a cookie in the browser for authorization
 	authToken, _ := client.Token()
 	http.SetCookie(w, &http.Cookie{
 		Name: "authTokenTMP",
@@ -44,6 +36,7 @@ func CompleteAuthHandler(w http.ResponseWriter, r *http.Request){
 		Expires: authToken.Expiry,
 	})
 
+	// Redirect back to the index page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
