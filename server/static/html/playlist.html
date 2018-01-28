@@ -17,24 +17,19 @@
     {{User.display_name}}
     <br/>
     {{Message}}
-    {{Playlist.name}}
+    <md-toolbar :md-elevation="1">
+        <span class="md-title">
+            {{Playlist.name}}
+        </span>
+    </md-toolbar>
 
     <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
-        <md-subheader>Tracks</md-subheader>
+        <md-subheader>Tracks ({{Playlist.tracks.total}})</md-subheader>
 
-        <md-list-item v-for="track in Playlist.tracks.items">
-            <md-icon class="md-primary">music_video</md-icon>
+        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track"></track-item>
 
-
-
-            <track-item v-bind:track="track.track" class="md-list-item-text"></track-item>
-
-        </md-list-item>
 
     </md-list>
-    <ol v-if="Playlist.tracks != undefined">
-
-    </ol>
 </div>
 <script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/vue-material@beta"></script>
@@ -75,7 +70,7 @@
 
     Vue.component('track-item', {
         props: ['track'],
-        template: '<div class="md-list-item-text"><span>{{track.name}}</span><span>{{artist}}</span></div>',
+        template: '#track-item-template',
         computed: {
             artist : function() {
                 artists = "";
@@ -88,5 +83,34 @@
         }
     })
 </script>
+
+<script type="text/x-template" id="track-item-template">
+
+    <div>
+        <md-list-item>
+            <md-icon class="md-primary">music_video</md-icon>
+
+            <div class="md-list-item-text" style="">
+                <span>{{track.name}}</span>
+                <span>{{artist}}</span>
+
+            </div>
+        </md-list-item>
+        <div style="padding-left: 65px">
+            <md-chip class="md-primary" v-for="chip in primary" :key="chip">{{ chip }}</md-chip>
+
+            <md-chip>Static</md-chip>
+            <md-chip class="md-primary" md-deletable>Deletable</md-chip>
+            <md-chip class="md-accent" md-clickable style="background-color: deeppink">Clickable</md-chip>
+            <md-chip md-disabled>Disabled</md-chip>
+            <md-chip>Static</md-chip>
+            <md-chip class="md-primary" md-deletable>Deletable</md-chip>
+            <md-chip class="md-accent" md-clickable>Clickable</md-chip>
+            <md-chip md-disabled>Disabled</md-chip>
+        </div>
+    </div>
+</script>
+
+
 </body>
 </html>

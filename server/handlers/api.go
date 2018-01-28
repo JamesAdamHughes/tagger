@@ -28,6 +28,12 @@ type ErrorResponse struct {
 	Message string
 }
 
+type AddSongTagRequest struct {
+	SongId string
+	UserId *int64
+	TagId int64
+	TagName string
+}
 
 func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	client := cookies.GetClientFromCookies(r)
@@ -88,6 +94,25 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 			Playlist: *playlist,
 		})
 	}
+}
+
+func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
+	client := cookies.GetClientFromCookies(r)
+
+
+	if r.Method == "POST" {
+		decoder := json.NewDecoder(r.Body)
+		var songTag AddSongTagRequest
+		err := decoder.Decode(&songTag)
+
+	} else if r.Method == "GET" {
+		songId, ok := r.URL.Query()["songId"]; if ok != true {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Missing Param: songId")})
+		}
+
+	}
+
+
 }
 
 
