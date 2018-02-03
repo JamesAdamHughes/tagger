@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"tagger/server/cookies"
 	"tagger/server/tags"
+	"strconv"
 )
 
 type PlaylistsResponse struct {
@@ -22,6 +23,12 @@ type PlaylistResponse struct {
 type UserResponse struct {
 	OK   bool
 	User *spotify.PrivateUser
+}
+
+type SongTagsResponse struct {
+	TrackId int64
+	UserId string
+	Tags []tags.Tag
 }
 
 type ErrorResponse struct {
@@ -123,10 +130,38 @@ func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
 
 		returnJson(w, ErrorResponse{OK: true, Message: fmt.Sprintf("Success adding tag %+v", songTag)})
 	} else if r.Method == "GET" {
-		//songId, ok := r.URL.Query()["songId"]; if ok != true {
-		//	returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Missing Param: songId")})
-		//	return
-		//}
+		songIdString, ok := r.URL.Query()["songId"]; if ok != true {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag. Missing Param: songId")})
+			return
+		}
+
+		songId, err := strconv.ParseInt(songIdString[0], 10, 64)
+		if err != nil {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag %s", err.Error())})
+			return
+		}
+
+		request := tags.GetSongTagRequest{
+			SongId: songId,
+			UserId: "0",
+		}
+
+		if client != nil {
+			user, _ := client.CurrentUser()
+			request.UserId = user.ID
+		}
+
+		songTags, err := tags.GetSongTags(request)
+		if err != nil {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag %s", err.Error())})
+			return
+		}
+
+		returnJson(w, SongTagsResponse{
+			TrackId: request.SongId,
+			UserId: request.UserId,
+			Tags: songTags,
+		})
 	}
 
 	return

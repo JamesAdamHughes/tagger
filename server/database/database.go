@@ -19,14 +19,7 @@ func init() {
 }
 
 func Exec(query string, args map[string]interface{}) (result sql.Result, err error) {
-
 	result, err = DBConn.NamedExec(query, args)
-	//stmt, es := DBConn.Prepare(query)
-	//if es != nil {
-	//	panic(es.Error())
-	//}
-	//
-	//result, err = stmt.Exec(args...)
 	return
 }
 

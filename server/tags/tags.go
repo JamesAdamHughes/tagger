@@ -11,6 +11,11 @@ type AddSongTagRequest struct {
 	TagName string
 }
 
+type GetSongTagRequest struct {
+	SongId int64
+	UserId string
+}
+
 type Tag struct {
 	TagId int64
 	TagName string
@@ -69,7 +74,7 @@ func AddTag(tagName string) (tag *Tag, err error) {
 		)
 	`
 
-	select_query := `
+	selectQuery := `
 		select 
 			pk_tag_id,
 			tag_name
@@ -89,7 +94,7 @@ func AddTag(tagName string) (tag *Tag, err error) {
 	}
 
 	// Get the tag id from name
-	rows, err := database.Select(select_query, map[string]interface{}{
+	rows, err := database.Select(selectQuery, map[string]interface{}{
 		"tag_name": tagName,
 	})
 	if err != nil {
@@ -105,5 +110,40 @@ func AddTag(tagName string) (tag *Tag, err error) {
 	}
 
 	tag = &t
+	return
+}
+
+func GetSongTags(request GetSongTagRequest) (tags []Tag, err error) {
+	query := `
+		select
+			fk_tag_id,
+			tag_name
+		from tb_user_song_tags tbust 
+		join tb_tag tbt
+			on tbt.pk_tag_id = tbust.fk_tag_id
+		where 1=1
+			and tbust.fk_song_id = :song_id
+			and tbust.fk_user_id = :user_id
+			
+	`
+
+	rows, err := database.Select(query,map[string]interface{}{
+		"song_id": request.SongId,
+		"user_id": request.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+
+	for rows.Next() {
+		var t Tag
+		err := rows.Scan(&t.TagId, &t.TagName)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, t)
+	}
+
 	return
 }
