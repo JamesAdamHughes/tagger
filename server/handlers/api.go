@@ -6,6 +6,7 @@ import (
 	"github.com/zmb3/spotify"
 	"fmt"
 	"tagger/server/cookies"
+	"tagger/server/tags"
 )
 
 type PlaylistsResponse struct {
@@ -28,12 +29,7 @@ type ErrorResponse struct {
 	Message string
 }
 
-type AddSongTagRequest struct {
-	SongId string
-	UserId *int64
-	TagId int64
-	TagName string
-}
+
 
 func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	client := cookies.GetClientFromCookies(r)
@@ -98,21 +94,42 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 
 func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
 	client := cookies.GetClientFromCookies(r)
-
-
+	
 	if r.Method == "POST" {
-		decoder := json.NewDecoder(r.Body)
-		var songTag AddSongTagRequest
-		err := decoder.Decode(&songTag)
+		var songTag tags.AddSongTagRequest
 
-	} else if r.Method == "GET" {
-		songId, ok := r.URL.Query()["songId"]; if ok != true {
-			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Missing Param: songId")})
+		// Marshal request into struct
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&songTag)
+		if err != nil {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Something went wrong in post %s", err.Error())})
+			return
 		}
 
+		// Add user id if cookie set
+		songTag.UserId = "0"
+		if client != nil {
+			user, _ := client.CurrentUser()
+			songTag.UserId = user.ID
+		}
+
+		// Add the song tag
+		err = tags.AddSongTag(&songTag)
+
+		if err != nil {
+			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error adding tag %s", err.Error())})
+			return
+		}
+
+		returnJson(w, ErrorResponse{OK: true, Message: fmt.Sprintf("Success adding tag %+v", songTag)})
+	} else if r.Method == "GET" {
+		//songId, ok := r.URL.Query()["songId"]; if ok != true {
+		//	returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Missing Param: songId")})
+		//	return
+		//}
 	}
 
-
+	return
 }
 
 

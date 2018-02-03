@@ -21,5 +21,7 @@ func StartServer() {
 	http.HandleFunc("/api/user/playlist", handlers.ApiPlaylistHandler)
 	http.HandleFunc("/api/user", handlers.ApiGetUser)
 
+	http.HandleFunc("/api/track/tag", handlers.ApiSongTagHandler)
+
 	http.ListenAndServe(":8080", nil)
 }

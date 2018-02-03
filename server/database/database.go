@@ -3,33 +3,36 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
-	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+var DBConn *sql.DB
 
 func init() {
-	db, err := sqlx.Open("sqlite3", "../dev.db")
+	db, err := sql.Open("sqlite3", "../dev.db")
+	DBConn = db
 	if err != nil {
 		fmt.Println(err)
 	}
+	return
 }
 
-func AddTag(songId string, tagId int64, userId *int64) {
-	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+func Exec(query string, args ...interface{}) (result sql.Result, err error) {
+	stmt, es := DBConn.Prepare(query)
+	if es != nil {
+		panic(es.Error())
 	}
 
-	_, err := db.Exec(
-		"INSERT INTO tb_user_song_tags (fk_user_id, fk_song_id, fk_tag_id) VALUES ($1, $2, $3)",
-		userId,
-		songId,
-		tagId)
+	result, err = stmt.Exec(args...)
+	return
+}
 
-	if err != nil {
-		log.Fatal(err)
+func Insert(query string, args ...interface{}) (result *sql.Row, err error) {
+	stmt, es := DBConn.Prepare(query)
+	if es != nil {
+		panic(es.Error())
 	}
 
+	result = stmt.QueryRow(args...)
 	return
 }
