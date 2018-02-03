@@ -30,14 +30,27 @@ func AddSongTag(request *AddSongTagRequest) (err error) {
 	// Insert tag
 	query := `
 	insert into tb_user_song_tags (fk_user_id, fk_song_id, fk_tag_id)
-	values (
-		?,
-		?,
-		?
+	select 
+		:user_id,
+		:song_id,
+		:tag_id
+	where not exists (
+		select 
+			pk_user_song_tag_id
+		from tb_user_song_tags
+		where 1=1 
+			and fk_song_id = :song_id
+			and fk_tag_id = :tag_id
+		
 	)
 	`
 
-	_, err = database.Exec(query, request.UserId, request.SongId, request.TagId)
+	_, err = database.Exec(query, map[string]interface{}{
+		"song_id": request.SongId,
+		"tag_id": request.TagId,
+		"user_id": request.UserId,
+	})
+
 	return
 }
 
@@ -45,12 +58,13 @@ func AddTag(tagName string) (tag *Tag, err error) {
 	query := `
 		insert into tb_tag (tag_name)
 		select 
-			?
+			:tag_name 	
 		where not exists(
 			select  
 				pk_tag_id 
 			from tb_tag 	
-			where tag_name = ? 	
+			where 1=1
+				and tag_name = :tag_name 	
 			limit 1
 		)
 	`
@@ -61,26 +75,33 @@ func AddTag(tagName string) (tag *Tag, err error) {
 			tag_name
 		from tb_tag 
 		where 1=1
-			and tag_name = ?
+			and tag_name = :tag_name
 		limit 1 
 	`
 
 	// Check insert the tag if it doesn't exist
-	_, err = database.Exec(query, tagName, tagName)
+	_, err = database.Exec(query, map[string]interface{}{
+		"tag_name": tagName,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the tag id from name
-	result, err := database.Insert(select_query, tagName)
+	rows, err := database.Select(select_query, map[string]interface{}{
+		"tag_name": tagName,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	var t Tag
-	err = result.Scan(&t.TagId, &t.TagName)
-	if err != nil {
-		return nil, err
+	for rows.Next() {
+		err = rows.Scan(&t.TagId, &t.TagName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tag = &t

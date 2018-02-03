@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"log"
 	"fmt"
-	"os"
+	//"os"
 	"golang.org/x/oauth2"
+	"os"
 )
 
 type AuthDetails struct {
@@ -23,7 +24,6 @@ const redirectURI = "http://localhost:8080/callback"
 type Client spotify.Client
 
 func init() {
-	fmt.Printf("Hello world in client")
 	os.Setenv("SPOTIFY_ID", "f346f777add648db9f09e7c6ddf87f34")
 	os.Setenv("SPOTIFY_SECRET", "1b5bd7bd2e084a178e77e24cf4940f21")
 }
@@ -60,7 +60,6 @@ func CompleteAuth(w http.ResponseWriter, r *http.Request) (*spotify.Client, erro
 	// Todo save this token for repeat calls
 	// todo save this in user session
 	Client := authDetails.Auth.NewClient(tok)
-	//fmt.Fprintf(w, "Login Completed!")
 
 	// use the client to make calls that require authorization
 	user, err := Client.CurrentUser()

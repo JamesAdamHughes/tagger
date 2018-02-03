@@ -94,7 +94,7 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 
 func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
 	client := cookies.GetClientFromCookies(r)
-	
+
 	if r.Method == "POST" {
 		var songTag tags.AddSongTagRequest
 

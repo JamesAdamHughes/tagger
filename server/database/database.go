@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/jmoiron/sqlx"
 )
 
-var DBConn *sql.DB
+var DBConn *sqlx.DB
 
 func init() {
-	db, err := sql.Open("sqlite3", "../dev.db")
+	db, err := sqlx.Open("sqlite3", "../dev.db")
 	DBConn = db
 	if err != nil {
 		fmt.Println(err)
@@ -17,13 +18,15 @@ func init() {
 	return
 }
 
-func Exec(query string, args ...interface{}) (result sql.Result, err error) {
-	stmt, es := DBConn.Prepare(query)
-	if es != nil {
-		panic(es.Error())
-	}
+func Exec(query string, args map[string]interface{}) (result sql.Result, err error) {
 
-	result, err = stmt.Exec(args...)
+	result, err = DBConn.NamedExec(query, args)
+	//stmt, es := DBConn.Prepare(query)
+	//if es != nil {
+	//	panic(es.Error())
+	//}
+	//
+	//result, err = stmt.Exec(args...)
 	return
 }
 
@@ -34,5 +37,10 @@ func Insert(query string, args ...interface{}) (result *sql.Row, err error) {
 	}
 
 	result = stmt.QueryRow(args...)
+	return
+}
+
+func Select(query string, args map[string]interface{}) (result *sqlx.Rows, err error){
+	result, err = DBConn.NamedQuery(query, args)
 	return
 }
