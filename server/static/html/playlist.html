@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
 </head>
 <body>
-<div id="app">
+<div id="app" style="padding: 20px">
     <div>
 
     </div>
@@ -22,14 +22,18 @@
         {{Playlist.name}}
         </span>
     </md-toolbar>
+    <form v-on:submit.prevent="onSearchSubmit">
+        <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false" md-layout="box" md-dense >
+            <label>Tags</label>
+        </md-autocomplete>
+    </form>
 
-    <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false">
-        <label>Tags</label>
-    </md-autocomplete>
+    <md-chip class="md-primary" v-for="tag in SearchTags" :key="tag" md-deletable>{{tag}}</md-chip>
+
 
     <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
         <md-subheader>Tracks ({{Playlist.tracks.total}})</md-subheader>
-        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-bind:tags="getTrackTags(track.track.id)"></track-item>
+        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-if="track.track.display" v-bind:tags="getTrackTags(track.track.id)"></track-item>
     </md-list>
 </div>
 <script src="https://unpkg.com/vue"></script>
@@ -46,7 +50,8 @@
             Playlist: [],
             PlaylistTags: [],
             Message: "Loading",
-            SearchTag: ''
+            SearchTag: '',
+            SearchTags: []
         },
         mounted: function() {
             var self = this;
@@ -61,6 +66,10 @@
                     this.Playlist = response.body.Playlist;
                     this.PlaylistTags = response.body.PlaylistTags;
                     this.Message = "";
+
+                    this.Playlist.tracks.items.forEach(function(track){
+                        track.track.display = true;
+                    });
                 }
             });
 
@@ -79,6 +88,36 @@
                     return returned[0].Tags
                 }
                 return []
+            },
+            onSearchSubmit: function(){
+                this.SearchTags.push(this.SearchTag);
+                console.log(this.SearchTag);
+                this.SearchTag = '';
+
+                // filter by this
+                this.filterSongsByTag()
+            },
+            filterSongsByTag: function(){
+                filteredSongIds = [];
+
+                for(var i = 0; i < this.PlaylistTags.length; i++){
+                    var songTags = this.PlaylistTags[i];
+                    for(var j = 0; j < songTags.Tags.length; j++) {
+                        var tag = songTags.Tags[j];
+                        if (this.SearchTags.indexOf(tag.TagName) > -1){
+                            filteredSongIds.push(songTags.SongId);
+                            break;
+                        }
+                    }
+                }
+
+                this.Playlist.tracks.items.forEach(function(track){
+                    if (filteredSongIds.indexOf(track.track.id) === -1){
+                        track.track.display = false;
+                    } else {
+                        track.track.display = true;
+                    }
+                });
             }
         },
         computed: {
@@ -86,8 +125,6 @@
                 var filteredTags = [];
 
                 this.PlaylistTags.forEach(function(songTags){
-                    // debugger;
-                    console.log(songTags);
                     songTags.Tags.forEach(function(tag){
                         if (filteredTags.indexOf(tag.TagName) === -1) {
                             filteredTags.push(tag.TagName)
