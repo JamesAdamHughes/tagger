@@ -19,16 +19,17 @@
     {{Message}}
     <md-toolbar :md-elevation="1">
         <span class="md-title">
-            {{Playlist.name}}
+        {{Playlist.name}}
         </span>
     </md-toolbar>
 
+    <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false">
+        <label>Tags</label>
+    </md-autocomplete>
+
     <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
         <md-subheader>Tracks ({{Playlist.tracks.total}})</md-subheader>
-
         <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-bind:tags="getTrackTags(track.track.id)"></track-item>
-
-
     </md-list>
 </div>
 <script src="https://unpkg.com/vue"></script>
@@ -44,7 +45,8 @@
             User: [],
             Playlist: [],
             PlaylistTags: [],
-            Message: "Loading"
+            Message: "Loading",
+            SearchTag: ''
         },
         mounted: function() {
             var self = this;
@@ -78,6 +80,22 @@
                 }
                 return []
             }
+        },
+        computed: {
+            uniquePlaylistTags: function(){
+                var filteredTags = [];
+
+                this.PlaylistTags.forEach(function(songTags){
+                    // debugger;
+                    console.log(songTags);
+                    songTags.Tags.forEach(function(tag){
+                        if (filteredTags.indexOf(tag.TagName) === -1) {
+                            filteredTags.push(tag.TagName)
+                        }
+                    })
+                });
+                return filteredTags
+            }
         }
     });
 
@@ -86,7 +104,8 @@
         template: '#track-item-template',
         data: function(){
             return {
-                tagname: ''
+                tagname: '',
+                trackTags: this.tags
             }
         },
         computed: {
@@ -95,12 +114,11 @@
                 this.track.artists.forEach(function(artist){
                     artists += artist.name + ", "
                 });
-
                 return artists.slice(0, -2)
             }
         },
         methods: {
-            onSubmit: function (value) {
+            onSubmit: function () {
                 songQs = 'SongId=' + this.track.id;
                 tagQs = 'TagName=' + this.tagname.trim();
 
@@ -109,24 +127,24 @@
                     'TagName' : this.tagname.trim()
                 }).then(function (response) {
                     console.log(response);
-                    // get body data
                     if (response.status !== 200) {
                         // this.Message = "Can't load playlist - " + response.body.Message;
                     } else {
-                        this.tags.push({
+                        this.trackTags.push({
                             'TagName': response.body.TagName,
                             'TagId': response.body.TagId
-                        })
+                        });
                         this.tagname = '';
                     }
                 })
             }
         }
-    })
+    });
 
     Vue.component('song-tags', {
         props: ['tags'],
         template: '#song-tags-template'
+
     })
 </script>
 
@@ -142,7 +160,7 @@
         </md-list-item>
 
         <div style="padding-left: 65px">
-            <song-tags v-if="tags.length > 0" v-bind:tags="tags"></song-tags>
+            <song-tags v-if="tags.length > 0" v-bind:tags="trackTags"></song-tags>
             <form v-on:submit.prevent="onSubmit">
                 <input v-model="tagname" name="tagname" placeholder="new tag">
             </form>
@@ -152,7 +170,7 @@
 
 <script type="text/x-template" id="song-tags-template">
     <div>
-        <md-chip class="md-primary" v-for="tag in tags" :key="tag.TagId" >{{tag.TagName}}</md-chip>
+        <md-chip class="md-primary" v-for="tag in tags" :key="tag.TagId" md-deletable>{{tag.TagName}}</md-chip>
     </div>
 </script>
 

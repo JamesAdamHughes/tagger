@@ -63,6 +63,10 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 		user, _ := client.CurrentUser()
 
 		playlist, err := client.GetPlaylist(user.ID, spotify.ID(playlistId[0]))
+		if err != nil {
+			returnError(w, ErrorResponse{OK: false, Message: err.Error()})
+			return
+		}
 
 		currentOffset := 100
 		limit := 100
@@ -87,7 +91,7 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 			currentOffset += 100
 		}
 
-		var playlistSongTags []SongTagsResponse
+		playlistSongTags := []SongTagsResponse{}
 
 		// Get tags for all songs (should be cached)
 		for _, track := range playlist.Tracks.Tracks {
@@ -98,11 +102,13 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Printf("\n\n error %+v", err)
 			}
-			playlistSongTags = append(playlistSongTags, SongTagsResponse{
-				SongId: track.Track.ID.String(),
-				UserId: user.ID,
-				Tags: tags,
-			})
+			if len(tags) > 0 {
+				playlistSongTags = append(playlistSongTags, SongTagsResponse{
+					SongId: track.Track.ID.String(),
+					UserId: user.ID,
+					Tags: tags,
+				})
+			}
 		}
 
 		if err != nil || playlist == nil {
