@@ -26,7 +26,7 @@
     <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
         <md-subheader>Tracks ({{Playlist.tracks.total}})</md-subheader>
 
-        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track"></track-item>
+        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-bind:tags="getTrackTags(track.track.id)"></track-item>
 
 
     </md-list>
@@ -43,6 +43,7 @@
         data: {
             User: [],
             Playlist: [],
+            PlaylistTags: [],
             Message: "Loading"
         },
         mounted: function() {
@@ -56,6 +57,7 @@
                     this.Message = "Can't load playlist - " + response.body.Message;
                 } else {
                     this.Playlist = response.body.Playlist;
+                    this.PlaylistTags = response.body.PlaylistTags;
                     this.Message = "";
                 }
             });
@@ -65,12 +67,28 @@
                 // get body data
                 this.User = response.body.User;
             });
+        },
+        methods: {
+            getTrackTags : function(id) {
+                returned = this.PlaylistTags.filter(function(tagList){
+                    return tagList.SongId === id && tagList.Tags !== null;
+                });
+                if (returned.length > 0) {
+                    return returned[0].Tags
+                }
+                return []
+            }
         }
     });
 
     Vue.component('track-item', {
-        props: ['track'],
+        props: ['track', 'tags'],
         template: '#track-item-template',
+        data: function(){
+            return {
+                tagname: ''
+            }
+        },
         computed: {
             artist : function() {
                 artists = "";
@@ -80,7 +98,35 @@
 
                 return artists.slice(0, -2)
             }
+        },
+        methods: {
+            onSubmit: function (value) {
+                songQs = 'SongId=' + this.track.id;
+                tagQs = 'TagName=' + this.tagname.trim();
+
+                this.$http.post('/api/track/tag', {
+                    'SongId': this.track.id,
+                    'TagName' : this.tagname.trim()
+                }).then(function (response) {
+                    console.log(response);
+                    // get body data
+                    if (response.status !== 200) {
+                        // this.Message = "Can't load playlist - " + response.body.Message;
+                    } else {
+                        this.tags.push({
+                            'TagName': response.body.TagName,
+                            'TagId': response.body.TagId
+                        })
+                        this.tagname = '';
+                    }
+                })
+            }
         }
+    })
+
+    Vue.component('song-tags', {
+        props: ['tags'],
+        template: '#song-tags-template'
     })
 </script>
 
@@ -89,25 +135,24 @@
     <div>
         <md-list-item>
             <md-icon class="md-primary">music_video</md-icon>
-
             <div class="md-list-item-text" style="">
                 <span>{{track.name}}</span>
                 <span>{{artist}}</span>
-
             </div>
         </md-list-item>
-        <div style="padding-left: 65px">
-            <md-chip class="md-primary" v-for="chip in primary" :key="chip">{{ chip }}</md-chip>
 
-            <md-chip>Static</md-chip>
-            <md-chip class="md-primary" md-deletable>Deletable</md-chip>
-            <md-chip class="md-accent" md-clickable style="background-color: deeppink">Clickable</md-chip>
-            <md-chip md-disabled>Disabled</md-chip>
-            <md-chip>Static</md-chip>
-            <md-chip class="md-primary" md-deletable>Deletable</md-chip>
-            <md-chip class="md-accent" md-clickable>Clickable</md-chip>
-            <md-chip md-disabled>Disabled</md-chip>
+        <div style="padding-left: 65px">
+            <song-tags v-if="tags.length > 0" v-bind:tags="tags"></song-tags>
+            <form v-on:submit.prevent="onSubmit">
+                <input v-model="tagname" name="tagname" placeholder="new tag">
+            </form>
         </div>
+    </div>
+</script>
+
+<script type="text/x-template" id="song-tags-template">
+    <div>
+        <md-chip class="md-primary" v-for="tag in tags" :key="tag.TagId" >{{tag.TagName}}</md-chip>
     </div>
 </script>
 

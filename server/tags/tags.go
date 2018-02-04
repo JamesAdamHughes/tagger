@@ -5,14 +5,14 @@ import (
 )
 
 type AddSongTagRequest struct {
-	SongId int64
+	SongId string
 	UserId string
 	TagId int64
 	TagName string
 }
 
 type GetSongTagRequest struct {
-	SongId int64
+	SongId string
 	UserId string
 }
 
