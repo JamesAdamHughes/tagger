@@ -1,4 +1,4 @@
-package tags
+package categoriser
 
 import (
 	"tagger/server/database"
@@ -16,10 +16,6 @@ type GetSongTagRequest struct {
 	UserId string
 }
 
-type Tag struct {
-	TagId int64
-	TagName string
-}
 
 func AddSongTag(request *AddSongTagRequest) (err error) {
 
@@ -30,7 +26,7 @@ func AddSongTag(request *AddSongTagRequest) (err error) {
 	}
 
 	// Add id to request
-	request.TagId = tag.TagId
+	request.TagId = tag.ID
 
 	// Insert tag
 	query := `
@@ -103,7 +99,7 @@ func AddTag(tagName string) (tag *Tag, err error) {
 
 	var t Tag
 	for rows.Next() {
-		err = rows.Scan(&t.TagId, &t.TagName)
+		err = rows.Scan(&t.ID, &t.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +134,7 @@ func GetSongTags(request GetSongTagRequest) (tags []Tag, err error) {
 
 	for rows.Next() {
 		var t Tag
-		err := rows.Scan(&t.TagId, &t.TagName)
+		err := rows.Scan(&t.ID, &t.Name)
 		if err != nil {
 			return nil, err
 		}

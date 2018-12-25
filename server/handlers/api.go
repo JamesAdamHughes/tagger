@@ -1,12 +1,11 @@
 package handlers
 
 import (
-	"net/http"
-	"encoding/json"
-	"github.com/zmb3/spotify"
 	"fmt"
+	"github.com/zmb3/spotify"
+	"net/http"
 	"tagger/server/cookies"
-	"tagger/server/tags"
+	"tagger/spotify_manager"
 )
 
 type PlaylistsResponse struct {
@@ -28,7 +27,12 @@ type UserResponse struct {
 type SongTagsResponse struct {
 	SongId string
 	UserId string
-	Tags   []tags.Tag
+	Tags   []Tag
+}
+
+type Tag struct {
+	ID int64
+	Name string
 }
 
 type ErrorResponse struct {
@@ -60,131 +64,77 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Println(playlistId)
 
-		user, _ := client.CurrentUser()
-
-		playlist, err := client.GetPlaylist(user.ID, spotify.ID(playlistId[0]))
+		res, err := spotify_manager.FetchSongsFromPlaylist(client, playlistId[0])
 		if err != nil {
-			returnError(w, ErrorResponse{OK: false, Message: err.Error()})
-			return
+			panic(err)
 		}
 
-		currentOffset := 100
-		limit := 100
 
-		// Make sure we get all songs, as is a limit of 100tracks per response
-		// Loop until all songs retrieved
-		for len(playlist.Tracks.Tracks) < playlist.Tracks.Total {
-
-			options := &spotify.Options{
-				Limit: &limit,
-				Offset: &currentOffset,
-			}
-
-			restOfPlaylist, err := client.GetPlaylistTracksOpt(user.ID, spotify.ID(playlistId[0]), options, "")
-			if err != nil {
-				fmt.Printf("\n\n error %+v", err)
-			}
-
-			// Add to the end of the tracks array
-			playlist.Tracks.Tracks = append(playlist.Tracks.Tracks, restOfPlaylist.Tracks...)
-
-			currentOffset += 100
-		}
-
-		playlistSongTags := []SongTagsResponse{}
-
-		// Get tags for all songs (should be cached)
-		for _, track := range playlist.Tracks.Tracks {
-			tags, err := tags.GetSongTags(tags.GetSongTagRequest{
-				SongId: track.Track.ID.String(),
-				UserId: user.ID,
-			})
-			if err != nil {
-				fmt.Printf("\n\n error %+v", err)
-			}
-			if len(tags) > 0 {
-				playlistSongTags = append(playlistSongTags, SongTagsResponse{
-					SongId: track.Track.ID.String(),
-					UserId: user.ID,
-					Tags: tags,
-				})
-			}
-		}
-
-		if err != nil || playlist == nil {
-			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting playlist: %v", playlist)})
-			return
-		}
-
-		returnJson(w, PlaylistResponse{
-			OK:       true,
-			Playlist: *playlist,
-			PlaylistTags: playlistSongTags,
-		})
+		returnJson(w, res)
 	}
 }
 
-func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
-	client := cookies.GetClientFromCookies(r)
-
-	if r.Method == "POST" {
-		var songTag tags.AddSongTagRequest
-
-		// Marshal request into struct
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&songTag)
-		if err != nil {
-			returnError(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Something went wrong in post %s", err.Error())})
-			return
-		}
-
-		// Add user id if cookie set
-		songTag.UserId = "0"
-		if client != nil {
-			user, _ := client.CurrentUser()
-			songTag.UserId = user.ID
-		}
-
-		// Add the song tag
-		err = tags.AddSongTag(&songTag)
-
-		if err != nil {
-			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error adding tag %s", err.Error())})
-			return
-		}
-
-		returnJson(w, songTag)
-	} else if r.Method == "GET" {
-		songIdString, ok := r.URL.Query()["songId"]; if ok != true {
-			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag. Missing Param: songId")})
-			return
-		}
-
-		request := tags.GetSongTagRequest{
-			SongId: songIdString[0],
-			UserId: "0",
-		}
-
-		if client != nil {
-			user, _ := client.CurrentUser()
-			request.UserId = user.ID
-		}
-
-		songTags, err := tags.GetSongTags(request)
-		if err != nil {
-			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag %s", err.Error())})
-			return
-		}
-
-		returnJson(w, SongTagsResponse{
-			SongId: request.SongId,
-			UserId: request.UserId,
-			Tags:   songTags,
-		})
-	}
-
-	return
-}
+//func ApiSongTagHandler(w http.ResponseWriter, r *http.Request){
+//	client := cookies.GetClientFromCookies(r)
+//
+//	if r.Method == "POST" {
+//		var songTag tags.AddSongTagRequest
+//
+//		// Marshal request into struct
+//		decoder := json.NewDecoder(r.Body)
+//		err := decoder.Decode(&songTag)
+//		if err != nil {
+//			returnError(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Something went wrong in post %s", err.Error())})
+//			return
+//		}
+//
+//		// Add user id if cookie set
+//		songTag.UserId = "0"
+//		if client != nil {
+//			user, _ := client.CurrentUser()
+//			songTag.UserId = user.ID
+//		}
+//
+//		// Add the song tag
+//		err = tags.AddSongTag(&songTag)
+//
+//		if err != nil {
+//			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error adding tag %s", err.Error())})
+//			return
+//		}
+//
+//		returnJson(w, songTag)
+//	} else if r.Method == "GET" {
+//		songIdString, ok := r.URL.Query()["songId"]; if ok != true {
+//			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag. Missing Param: songId")})
+//			return
+//		}
+//
+//		request := tags.GetSongTagRequest{
+//			SongId: songIdString[0],
+//			UserId: "0",
+//		}
+//
+//		if client != nil {
+//			user, _ := client.CurrentUser()
+//			request.UserId = user.ID
+//		}
+//
+//		songTags, err := tags.GetSongTags(request)
+//		if err != nil {
+//			returnJson(w, ErrorResponse{OK: false, Message: fmt.Sprintf("Error getting tag %s", err.Error())})
+//			return
+//		}
+//
+//		returnJson(w, SongTagsResponse{
+//			SongId: request.SongId,
+//			UserId: request.UserId,
+//			Tags:   songTags,
+//		})
+//	}
+//
+//	return
+//}
 
 
 func ApiGetUser(w http.ResponseWriter, r *http.Request) {
@@ -200,16 +150,4 @@ func ApiGetUser(w http.ResponseWriter, r *http.Request) {
 		User: user,
 	})
 
-}
-
-func returnJson(w http.ResponseWriter, i interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(i)
-	return
-}
-
-func returnError(w http.ResponseWriter, i interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, fmt.Sprintf("%+v", i), http.StatusInternalServerError)
-	return
 }

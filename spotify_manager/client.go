@@ -19,7 +19,7 @@ type AuthDetails struct {
 // You must register an application at Spotify's developer portal
 // and enter this value.
 const redirectURI = "http://localhost:8080/callback"
-//var Client spotify.Client
+//var Client spotify_manager.Client
 
 type Client spotify.Client
 
@@ -42,7 +42,7 @@ func GetClient(token *oauth2.Token) *spotify.Client {
 }
 
 // Handles OAuth2 with Spotify
-// Returns the spotify client
+// Returns the spotify_manager client
 func CompleteAuth(w http.ResponseWriter, r *http.Request) (*spotify.Client, error) {
 	authDetails := GetAuthDetails()
 
@@ -72,4 +72,6 @@ func CompleteAuth(w http.ResponseWriter, r *http.Request) (*spotify.Client, erro
 
 	return &Client, nil
 }
+
+
 

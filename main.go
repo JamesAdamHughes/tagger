@@ -1,8 +1,8 @@
 package main
 
 import (
-	"tagger/server"
 	"fmt"
+	"tagger/server"
 )
 
 func main(){

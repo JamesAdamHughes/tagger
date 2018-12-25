@@ -23,12 +23,16 @@
         </span>
     </md-toolbar>
     <form v-on:submit.prevent="onSearchSubmit">
-        <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false" md-layout="box" md-dense >
+        <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false" md-layout="box" md-dense>
             <label>Tags</label>
+            <template slot="md-autocomplete-item" slot-scope="{ item, term }" v-on:md-selected="selectTag($event)">
+                <md-highlight-text :md-term="term">{{ item.name }} ({{ item.count }})</md-highlight-text>
+            </template>
         </md-autocomplete>
     </form>
 
-    <md-chip class="md-primary" v-for="tag in SearchTags" :key="tag" md-deletable>{{tag}}</md-chip>
+    <md-chips md-placeholder="Add club..." class="md-primary" v-model="SearchTags" md-deletable v-on:md-delete="deleteFilterTag($event)">
+    </md-chips>
 
 
     <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
@@ -45,6 +49,7 @@
 
     var app = new Vue({
         el: '#app',
+        delimiters: ['${', '}'],
         data: {
             User: [],
             Playlist: [],
@@ -89,30 +94,49 @@
                 }
                 return []
             },
+            selectTag: function(tag){
+                this.SearchTags.push(tag);
+                this.SearchTag = '';
+                this.filterSongsByTag();
+            },
             onSearchSubmit: function(){
                 this.SearchTags.push(this.SearchTag);
-                console.log(this.SearchTag);
                 this.SearchTag = '';
 
                 // filter by this
                 this.filterSongsByTag()
             },
+            deleteFilterTag: function (text) {
+                console.log(text);
+                var index = this.SearchTags.indexOf(text);
+                if (index > -1) {
+                    this.SearchTags.splice(index, 1);
+                }
+                this.filterSongsByTag()
+            },
             filterSongsByTag: function(){
-                filteredSongIds = [];
+                var filteredSongIds = [];
+                var showAll = false;
 
-                for(var i = 0; i < this.PlaylistTags.length; i++){
-                    var songTags = this.PlaylistTags[i];
-                    for(var j = 0; j < songTags.Tags.length; j++) {
-                        var tag = songTags.Tags[j];
-                        if (this.SearchTags.indexOf(tag.TagName) > -1){
-                            filteredSongIds.push(songTags.SongId);
-                            break;
+                if (this.SearchTags.length === 0) {
+                    showAll = true
+                } else {
+                    for(var i = 0; i < this.PlaylistTags.length; i++){
+                        var songTags = this.PlaylistTags[i];
+                        for(var j = 0; j < songTags.Tags.length; j++) {
+                            var tag = songTags.Tags[j];
+                            if (this.SearchTags.indexOf(tag.TagName) > -1){
+                                filteredSongIds.push(songTags.SongId);
+                                break;
+                            }
                         }
                     }
                 }
 
                 this.Playlist.tracks.items.forEach(function(track){
-                    if (filteredSongIds.indexOf(track.track.id) === -1){
+                    if (showAll) {
+                        track.track.display = true;
+                    } else if (filteredSongIds.indexOf(track.track.id) === -1){
                         track.track.display = false;
                     } else {
                         track.track.display = true;
@@ -126,11 +150,21 @@
 
                 this.PlaylistTags.forEach(function(songTags){
                     songTags.Tags.forEach(function(tag){
-                        if (filteredTags.indexOf(tag.TagName) === -1) {
-                            filteredTags.push(tag.TagName)
+                        var added = false;
+                        filteredTags.forEach(function(ft){
+                            if (ft.name === tag.TagName) {
+                                ft.count += 1;
+                                added = true;
+                            }
+                        });
+                        if (!added) {
+                            filteredTags.push({name: tag.TagName, count: 1})
                         }
                     })
                 });
+
+                filteredTags.sort(function(a,b) {return (a.count > b.count) ? -1 : ((b.count > a.count) ? 1 : 0);} );
+
                 return filteredTags
             }
         }
@@ -155,7 +189,7 @@
             }
         },
         methods: {
-            onSubmit: function () {
+            postTrackTag: function () {
                 songQs = 'SongId=' + this.track.id;
                 tagQs = 'TagName=' + this.tagname.trim();
 
@@ -174,14 +208,23 @@
                         this.tagname = '';
                     }
                 })
+            },
+            tagCreatedEvent: function(value){
+                this.tagname = value;
+                this.postTrackTag();
             }
         }
     });
 
     Vue.component('song-tags', {
         props: ['tags'],
-        template: '#song-tags-template'
-
+        template: '#song-tags-template',
+        methods: {
+            addNewTag: function (tag) {
+                this.tags.pop(); // remove the last added tag (gets added automatically
+                this.$emit('track-tag-add', tag.trim());
+            }
+        }
     })
 </script>
 
@@ -197,18 +240,18 @@
         </md-list-item>
 
         <div style="padding-left: 65px">
-            <song-tags v-if="tags.length > 0" v-bind:tags="trackTags"></song-tags>
-            <form v-on:submit.prevent="onSubmit">
-                <input v-model="tagname" name="tagname" placeholder="new tag">
-            </form>
+            <song-tags  v-bind:tags="trackTags" @track-tag-add="tagCreatedEvent"></song-tags>
         </div>
     </div>
 </script>
 
 <script type="text/x-template" id="song-tags-template">
-    <div>
-        <md-chip class="md-primary" v-for="tag in tags" :key="tag.TagId" md-deletable>{{tag.TagName}}</md-chip>
-    </div>
+    <md-chips class="md-primary" v-model="tags" md-placeholder="Add tags..." md-check-duplicated v-on:md-insert="addNewTag($event)">
+        <template slot="md-chip" slot-scope="{ chip }">
+        {{ chip.Name }} <small v-if="chip === 1">(Marcos Moura)</small>
+        </template>
+        <label>Tags</label>
+    </md-chips>
 </script>
 
 

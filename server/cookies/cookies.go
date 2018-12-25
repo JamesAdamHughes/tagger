@@ -2,7 +2,7 @@ package cookies
 
 import (
 	"net/http"
-	"tagger/server/spotify"
+	"tagger/spotify_manager"
 	"golang.org/x/oauth2"
 	"github.com/zmb3/spotify"
 )

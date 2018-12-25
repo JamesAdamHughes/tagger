@@ -1,13 +1,16 @@
 package handlers
 
 import (
-	"net/http"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
-const STATIC_PATH = "server/static"
+const STATIC_PATH = "/src/tagger/static"
 
 type Page struct {
 	Title string
@@ -15,38 +18,57 @@ type Page struct {
 }
 
 type AuthPage struct {
-	Title string
-	Body string
+	Title   string
+	Body    string
 	AuthUrl string
 }
 
 func RenderTemplate(w http.ResponseWriter, tmpl string, p interface{}) {
-	filename := STATIC_PATH + "/html/" + tmpl + ".html"
-
+	filename := getTemplateFileName(tmpl)
 	t, err := template.ParseFiles(filename)
 	if err != nil {
-		fmt.Print(err)
-		MissingPageHandler(w, filename)
+		fmt.Println(err.Error())
+		MissingPageHandler(w, tmpl)
 		return
 	}
 
-	t.Execute(w, p)
+	_ = t.Execute(w, p)
 }
 
-func MissingPageHandler(w http.ResponseWriter, filename string) {
-	t, _ := template.ParseFiles(STATIC_PATH + "/html/error_404.html")
-	t.Execute(w, Page{
+func MissingPageHandler(w http.ResponseWriter, missingPage string) {
+	filename := getTemplateFileName("error_404")
+	t, _ := template.ParseFiles(filename)
+	_ = t.Execute(w, Page{
 		Title: "File Not Found",
-		Body: filename,
+		Body:  missingPage,
 	})
 }
 
-func LoadPage(title string) (*Page, error) {
-	filename := STATIC_PATH + "/html/" + title + ".html"
+func LoadTemplate(title string) (*Page, error) {
+	filename := getTemplateFileName(title)
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Print(err.Error())
 		return nil, err
 	}
 	return &Page{Title: title, Body: string(body)}, nil
+}
+
+func getTemplateFileName(tmpl string) string {
+	d, _ := os.Getwd()
+	filename := filepath.Join(d, STATIC_PATH, "/html/"+tmpl+".html")
+	fmt.Println(filename)
+	return filename
+}
+
+func returnJson(w http.ResponseWriter, i interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(i)
+	return
+}
+
+func returnError(w http.ResponseWriter, i interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, fmt.Sprintf("%+v", i), http.StatusInternalServerError)
+	return
 }
