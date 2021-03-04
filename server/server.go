@@ -12,6 +12,7 @@ import (
 
 func StartServer() {
 	fmt.Printf("\nStarting server at 8080\n")
+	http.HandleFunc("/static", handlers.StaticHandler)
 
 	http.HandleFunc("/", handlers.IndexHandler)
 	http.HandleFunc("/register", handlers.RegisterHandler)

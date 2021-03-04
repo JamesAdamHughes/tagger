@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const STATIC_PATH = "/src/tagger/static"
+const STATIC_PATH = "/tagger/static"
 
 type Page struct {
 	Title string
@@ -57,7 +57,7 @@ func LoadTemplate(title string) (*Page, error) {
 func getTemplateFileName(tmpl string) string {
 	d, _ := os.Getwd()
 	filename := filepath.Join(d, STATIC_PATH, "/html/"+tmpl+".html")
-	fmt.Println(filename)
+	fmt.Println("Serving file: " + filename)
 	return filename
 }
 

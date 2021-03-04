@@ -5,8 +5,7 @@ import (
 	"tagger/server"
 )
 
-func main(){
-	fmt.Printf("hello world")
-
+func main() {
+	fmt.Printf("Starting the server")
 	server.StartServer()
 }

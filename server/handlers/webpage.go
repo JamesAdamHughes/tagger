@@ -3,15 +3,14 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"tagger/spotify_manager"
 	"tagger/server/cookies"
+	"tagger/spotify_manager"
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	client := cookies.GetClientFromCookies(r)
-
 	if client != nil {
-		page, _ := LoadTemplate("index_authed2")
+		page, _ := LoadTemplate("index_authed")
 		_, _ = fmt.Fprint(w, page.Body)
 	} else {
 		fmt.Println("User is anonymous")
@@ -29,7 +28,7 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CompleteAuthHandler(w http.ResponseWriter, r *http.Request){
+func CompleteAuthHandler(w http.ResponseWriter, r *http.Request) {
 	client, err := spotify_manager.CompleteAuth(w, r)
 
 	if err != nil {
@@ -39,8 +38,8 @@ func CompleteAuthHandler(w http.ResponseWriter, r *http.Request){
 	// Set a cookie in the browser for authorization
 	authToken, _ := client.Token()
 	http.SetCookie(w, &http.Cookie{
-		Name: "authTokenTMP",
-		Value: authToken.AccessToken,
+		Name:    "authTokenTMP",
+		Value:   authToken.AccessToken,
 		Expires: authToken.Expiry,
 	})
 
@@ -56,8 +55,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Show link to user to auth with spotify_manager
 	RenderTemplate(w, "register", AuthPage{
-		Title: "Register with Spotify",
-		Body: "Rgeister with your Spotify account to use tagger",
+		Title:   "Register with Spotify",
+		Body:    "Rgeister with your Spotify account to use tagger",
 		AuthUrl: url,
 	})
 }
