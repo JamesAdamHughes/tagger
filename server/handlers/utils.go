@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const STATIC_PATH = "/tagger/static"
+const STATIC_PATH = "/static"
 
 type Page struct {
 	Title string

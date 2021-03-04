@@ -2,26 +2,27 @@ package spotify_manager
 
 import (
 	"fmt"
-	"github.com/zmb3/spotify"
 	"tagger/categoriser"
+
+	"github.com/zmb3/spotify"
 )
 
 type PlaylistResponse struct {
-	OK bool
-	Playlist spotify.FullPlaylist
+	OK           bool
+	Playlist     spotify.FullPlaylist
 	PlaylistTags []SongTagsResponse
 }
 
 type SongTagsResponse struct {
 	SongId string
 	UserId string
-	Tags  []categoriser.Tag
+	Tags   []categoriser.Tag
 }
 
 func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*PlaylistResponse, error) {
 	user, _ := client.CurrentUser()
 
-	playlist, err := client.GetPlaylist(user.ID, spotify.ID(playlistID))
+	playlist, err := client.GetPlaylist(spotify.ID(playlistID))
 	if err != nil {
 		return nil, err
 	}
@@ -34,11 +35,11 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 	for len(playlist.Tracks.Tracks) < playlist.Tracks.Total {
 
 		options := &spotify.Options{
-			Limit: &limit,
+			Limit:  &limit,
 			Offset: &currentOffset,
 		}
 
-		restOfPlaylist, err := client.GetPlaylistTracksOpt(user.ID, spotify.ID(playlistID), options, "")
+		restOfPlaylist, err := client.GetPlaylistTracksOpt(spotify.ID(playlistID), options, "")
 		if err != nil {
 			fmt.Printf("\n\n error %+v", err)
 		}
@@ -56,7 +57,7 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 	for _, track := range playlist.Tracks.Tracks {
 
 		songTags, _ := genreTagger.GetSongTags(categoriser.Song{
-			Name: track.Track.Name,
+			Name:   track.Track.Name,
 			Artist: track.Track.Artists[0].Name,
 		}, "0")
 
@@ -73,14 +74,14 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 			playlistSongTags = append(playlistSongTags, SongTagsResponse{
 				SongId: track.Track.ID.String(),
 				UserId: user.ID,
-				Tags: songTags,
+				Tags:   songTags,
 			})
 		}
 	}
 
 	return &PlaylistResponse{
-		OK:true,
-		Playlist: *playlist,
-		PlaylistTags:playlistSongTags,
+		OK:           true,
+		Playlist:     *playlist,
+		PlaylistTags: playlistSongTags,
 	}, nil
 }
