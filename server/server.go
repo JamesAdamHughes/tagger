@@ -10,8 +10,10 @@ import (
 	"tagger/server/handlers"
 )
 
+const PORT = 8081
+
 func StartServer() {
-	fmt.Printf("\nStarting server at 8080\n")
+	fmt.Printf("\nStarting server from docker %d\n", PORT)
 	http.HandleFunc("/static", handlers.StaticHandler)
 
 	http.HandleFunc("/", handlers.IndexHandler)
@@ -24,7 +26,7 @@ func StartServer() {
 
 	//http.HandleFunc("/api/track/tag", handlers.ApiSongTagHandler)
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil); err != nil {
 		panic(err)
 	}
 }

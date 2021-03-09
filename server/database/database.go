@@ -3,8 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var DBConn *sqlx.DB
@@ -33,7 +34,7 @@ func Insert(query string, args ...interface{}) (result *sql.Row, err error) {
 	return
 }
 
-func Select(query string, args map[string]interface{}) (result *sqlx.Rows, err error){
+func Select(query string, args map[string]interface{}) (result *sqlx.Rows, err error) {
 	result, err = DBConn.NamedQuery(query, args)
 	return
 }
