@@ -1,24 +1,25 @@
 package spotify_manager
 
 import (
-	"github.com/zmb3/spotify"
-	"net/http"
-	"log"
 	"fmt"
-	//"os"
+	"github.com/zmb3/spotify"
+	"log"
+	"net/http"
+
 	"golang.org/x/oauth2"
 	"os"
 )
 
 type AuthDetails struct {
-	Auth spotify.Authenticator
+	Auth  spotify.Authenticator
 	State string
 }
 
 // redirectURI is the OAuth redirect URI for the application.
 // You must register an application at Spotify's developer portal
 // and enter this value.
-const redirectURI = "http://localhost:8080/callback"
+var redirectURI string
+
 //var Client spotify_manager.Client
 
 type Client spotify.Client
@@ -26,11 +27,12 @@ type Client spotify.Client
 func init() {
 	os.Setenv("SPOTIFY_ID", "f346f777add648db9f09e7c6ddf87f34")
 	os.Setenv("SPOTIFY_SECRET", "1b5bd7bd2e084a178e77e24cf4940f21")
+	redirectURI = fmt.Sprintf("http://localhost:%s/callback", os.Getenv("PORT"))
 }
 
 func GetAuthDetails() AuthDetails {
 	return AuthDetails{
-		Auth: spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate),
+		Auth:  spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate),
 		State: "abc123",
 	}
 }
@@ -72,6 +74,3 @@ func CompleteAuth(w http.ResponseWriter, r *http.Request) (*spotify.Client, erro
 
 	return &Client, nil
 }
-
-
-
