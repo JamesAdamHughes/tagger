@@ -19,27 +19,28 @@ type TopTags struct {
 
 type LastFmTag struct {
 	Count int64
-	Name string
+	Name  string
 }
 
 type Tag struct {
-	ID int64
+	ID   int64
 	Name string
 }
 
 type Song struct {
-	Name string
+	Name   string
 	Artist string
-	ID string
+	ID     string
 }
 
 type Tagger interface {
 	GetSongTags(song Song, userId string) (tags []Tag, err error)
+	SaveSongTags(song Song, userId string, tagName string) (err error)
 }
 
-type GenreTagger struct {}
+type ScrobblerTagger struct{}
 
-func (gt GenreTagger) GetSongTags(song Song, userId string) (tags []Tag, err error) {
+func (gt ScrobblerTagger) GetSongTags(song Song, userId string) (tags []Tag, err error) {
 
 	song.Artist = strings.Replace(song.Artist, " ", "+", -1)
 	song.Name = strings.Replace(song.Name, " ", "+", -1)
@@ -67,7 +68,7 @@ func (gt GenreTagger) GetSongTags(song Song, userId string) (tags []Tag, err err
 			continue
 		}
 		tags = append(tags, Tag{
-			ID: 0,
+			ID:   0,
 			Name: tag.Name,
 		})
 	}
@@ -75,4 +76,32 @@ func (gt GenreTagger) GetSongTags(song Song, userId string) (tags []Tag, err err
 	return tags, nil
 }
 
+func (gt ScrobblerTagger) SaveSongTags(song Song, userId string, tagName string) (err error) {
+	return nil
+}
 
+type StoredTagger struct{}
+
+func (st StoredTagger) GetSongTags(song Song, userId string) (tags []Tag, err error) {
+	r := GetSongTagRequest{song.ID, userId}
+	tags, err = GetSongTags(r)
+
+	if err != nil {
+		fmt.Printf("\nStoredTagger error %s, %+v\n", err.Error(), tags)
+
+		return nil, err
+	}
+
+	fmt.Printf("\nStoredTagger %s, %+v\n", song.ID, tags)
+
+	return tags, nil
+}
+
+func (st StoredTagger) SaveSongTags(song Song, userId string, tagName string) (err error) {
+	r := AddSongTagRequest{SongId: song.ID, UserId: userId, TagName: tagName}
+	err = AddPlaylistSongTag(r)
+	if err != nil {
+		return err
+	}
+	return nil
+}

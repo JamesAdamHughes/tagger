@@ -5,9 +5,8 @@ import (
 )
 
 type AddSongTagRequest struct {
-	SongId string
-	UserId string
-	TagId int64
+	SongId  string
+	UserId  string
 	TagName string
 }
 
@@ -16,17 +15,13 @@ type GetSongTagRequest struct {
 	UserId string
 }
 
-
-func AddSongTag(request *AddSongTagRequest) (err error) {
+func AddPlaylistSongTag(request AddSongTagRequest) (err error) {
 
 	// add the tag to tb_tag if needed + get tag id
 	tag, err := AddTag(request.TagName)
 	if err != nil {
 		return err
 	}
-
-	// Add id to request
-	request.TagId = tag.ID
 
 	// Insert tag
 	query := `
@@ -42,13 +37,12 @@ func AddSongTag(request *AddSongTagRequest) (err error) {
 		where 1=1 
 			and fk_song_id = :song_id
 			and fk_tag_id = :tag_id
-		
 	)
 	`
 
 	_, err = database.Exec(query, map[string]interface{}{
 		"song_id": request.SongId,
-		"tag_id": request.TagId,
+		"tag_id":  tag.ID,
 		"user_id": request.UserId,
 	})
 
@@ -119,18 +113,17 @@ func GetSongTags(request GetSongTagRequest) (tags []Tag, err error) {
 			on tbt.pk_tag_id = tbust.fk_tag_id
 		where 1=1
 			and tbust.fk_song_id = :song_id
-			and tbust.fk_user_id = :user_id
-			
+			and tbust.fk_user_id = :user_id			
 	`
 
-	rows, err := database.Select(query,map[string]interface{}{
+	rows, err := database.Select(query, map[string]interface{}{
 		"song_id": request.SongId,
 		"user_id": request.UserId,
 	})
+
 	if err != nil {
 		return nil, err
 	}
-
 
 	for rows.Next() {
 		var t Tag

@@ -51,31 +51,52 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 	}
 
 	playlistSongTags := []SongTagsResponse{}
-	genreTagger := categoriser.GenreTagger{}
+	scrobblerTagger := categoriser.ScrobblerTagger{}
+	storedTagger := categoriser.StoredTagger{}
 
 	// Get tags for all songs (should be cached)
+	// check if we have stored tags first, otherwise use the scrobbler API
+
 	for _, track := range playlist.Tracks.Tracks {
+		songID := track.Track.ID.String()
+		song := categoriser.Song{ID: songID}
 
-		songTags, _ := genreTagger.GetSongTags(categoriser.Song{
-			Name:   track.Track.Name,
-			Artist: track.Track.Artists[0].Name,
-		}, "0")
+		tags, err := storedTagger.GetSongTags(song, user.ID)
+		if err == nil && len(tags) > 0 {
 
-		fmt.Printf("\n Song: %s, tags: %+v", track.Track.Name, songTags)
+			fmt.Printf("\nDATABASE Song: %s, tags: %+v", track.Track.Name, tags)
 
-		//tags, err := tags.GetSongTags(tags.GetSongTagRequest{
-		//	SongId: track.Track.ID.String(),
-		//	UserId: user.ID,
-		//})
-		//if err != nil {
-		//	fmt.Printf("\n\n error %+v", err)
-		//}
-		if len(songTags) > 0 {
+			// no error and got tags back, return that
+			// do nothing - get from the api
 			playlistSongTags = append(playlistSongTags, SongTagsResponse{
-				SongId: track.Track.ID.String(),
+				SongId: songID,
 				UserId: user.ID,
-				Tags:   songTags,
+				Tags:   tags,
 			})
+			continue
+		} else {
+			// pull tags from an API then save them to the DB
+
+			songTags, _ := scrobblerTagger.GetSongTags(categoriser.Song{
+				Name:   track.Track.Name,
+				Artist: track.Track.Artists[0].Name,
+			}, "0")
+
+			fmt.Printf("\n SCROBBLER Song: %s, tags: %+v", track.Track.Name, songTags)
+
+			if len(songTags) > 0 {
+				playlistSongTags = append(playlistSongTags, SongTagsResponse{
+					SongId: track.Track.ID.String(),
+					UserId: user.ID,
+					Tags:   songTags,
+				})
+
+				for _, t := range songTags {
+					fmt.Printf("\nSaving this tag boy %+v\n", t.Name)
+					storedTagger.SaveSongTags(song, user.ID, t.Name)
+				}
+			}
+
 		}
 	}
 
