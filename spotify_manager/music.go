@@ -3,6 +3,7 @@ package spotify_manager
 import (
 	"fmt"
 	"tagger/categoriser"
+	"tagger/server/redis"
 
 	"github.com/zmb3/spotify"
 )
@@ -29,6 +30,8 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 
 	currentOffset := 100
 	limit := 100
+
+	redis.Test()
 
 	// Make sure we get all songs, as is a limit of 100tracks per response
 	// Loop until all songs retrieved

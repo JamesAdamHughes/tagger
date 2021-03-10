@@ -8,5 +8,7 @@ WORKDIR /go/src/tagger
 COPY go.mod .
 COPY go.sum .
 
+RUN go mod tidy
+
 RUN go mod download
 CMD /go/bin/air -c /etc/air.toml

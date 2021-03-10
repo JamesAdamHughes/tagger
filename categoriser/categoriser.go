@@ -9,19 +9,6 @@ import (
 	"strings"
 )
 
-type lastFmTagResponse struct {
-	TopTags `json:"toptags"`
-}
-
-type TopTags struct {
-	Tag []LastFmTag `json:"tag"`
-}
-
-type LastFmTag struct {
-	Count int64
-	Name  string
-}
-
 type Tag struct {
 	ID   int64
 	Name string
@@ -31,6 +18,19 @@ type Song struct {
 	Name   string
 	Artist string
 	ID     string
+}
+
+type lastFmTagResponse struct {
+	topTags `json:"toptags"`
+}
+
+type topTags struct {
+	Tag []lastFmTag `json:"tag"`
+}
+
+type lastFmTag struct {
+	Count int64
+	Name  string
 }
 
 type Tagger interface {
@@ -45,7 +45,7 @@ func (gt ScrobblerTagger) GetSongTags(song Song, userId string) (tags []Tag, err
 	song.Artist = strings.Replace(song.Artist, " ", "+", -1)
 	song.Name = strings.Replace(song.Name, " ", "+", -1)
 
-	resp, err := http.Get(fmt.Sprintf("http://ws.audioscrobbler.com/2.0/?method=track.gettoptags&artist=%s&track=%s&api_key=0e367bb3137650849d8cc15446ed3566&format=json", song.Artist, song.Name))
+	resp, err := http.Get(fmt.Sprintf("http://ws.audioscrobbler.com/2.0/?method=track.gettoptags&artist=%s&track=%s&api_key=0e367bb3137650849d8cc15446ed3566&format=json ", song.Artist, song.Name))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -63,7 +63,7 @@ func (gt ScrobblerTagger) GetSongTags(song Song, userId string) (tags []Tag, err
 
 	log.Println(lastfmResponse)
 
-	for idx, tag := range lastfmResponse.TopTags.Tag {
+	for idx, tag := range lastfmResponse.topTags.Tag {
 		if idx > 4 {
 			continue
 		}
