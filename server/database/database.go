@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -11,11 +12,23 @@ import (
 var DBConn *sqlx.DB
 
 func init() {
-	db, err := sqlx.Open("sqlite3", "../dev.db")
+	dbName := os.Getenv("DBNAME")
+	dbPath := fmt.Sprintf("/go/src/tagger/%s.db", dbName)
+
+	fmt.Printf("init connection to sqlite database %s\n", dbPath)
+
+	db, err := sqlx.Open("sqlite3", dbPath)
 	DBConn = db
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	// test running a query on the DB. Sqlite3 will always find a db, doesn't mean there is anything in it
+	_, err = Select("select * from tb_user_song_tags limit 1", map[string]interface{}{})
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to database  - error: %s", err.Error()))
+	}
+
 	return
 }
 

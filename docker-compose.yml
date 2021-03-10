@@ -9,6 +9,9 @@ services:
       context: .
     ports:
       - "8081:8081"
+    environment:
+      - PORT=8081
+      - DBNAME=tagger_db_dev_01
     volumes:
       - ./:/go/src/tagger:delegated
     stdin_open: true # docker run -i
