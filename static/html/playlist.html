@@ -14,9 +14,9 @@
     <div>
 
     </div>
-    {{User.display_name}}
+    {{ User.display_name }}
     <br/>
-    {{Message}}
+    {{ message }}
     <md-toolbar :md-elevation="1">
         <span class="md-title">
         {{Playlist.name}}
@@ -40,16 +40,13 @@
         <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-if="track.track.display" v-bind:tags="getTrackTags(track.track.id)"></track-item>
     </md-list>
 </div>
-<script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/vue-material@beta"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
 
 <script>
     Vue.use(VueMaterial.default);
 
     var app = new Vue({
         el: '#app',
-        delimiters: ['${', '}'],
         data: {
             User: [],
             Playlist: [],
