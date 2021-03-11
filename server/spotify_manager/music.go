@@ -2,7 +2,9 @@ package spotify_manager
 
 import (
 	"fmt"
-	"tagger/categoriser"
+	"tagger/server/categoriser"
+
+	//"tagger/server"
 	"tagger/server/redis"
 
 	"github.com/zmb3/spotify"

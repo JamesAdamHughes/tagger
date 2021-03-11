@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"tagger/server/cookies"
-	"tagger/spotify_manager"
+	"tagger/server/spotify_manager"
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

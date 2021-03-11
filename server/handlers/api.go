@@ -5,7 +5,7 @@ import (
 	"github.com/zmb3/spotify"
 	"net/http"
 	"tagger/server/cookies"
-	"tagger/spotify_manager"
+	"tagger/server/spotify_manager"
 )
 
 type PlaylistsResponse struct {
@@ -14,8 +14,8 @@ type PlaylistsResponse struct {
 }
 
 type PlaylistResponse struct {
-	OK bool
-	Playlist spotify.FullPlaylist
+	OK           bool
+	Playlist     spotify.FullPlaylist
 	PlaylistTags []SongTagsResponse
 }
 
@@ -31,7 +31,7 @@ type SongTagsResponse struct {
 }
 
 type Tag struct {
-	ID int64
+	ID   int64
 	Name string
 }
 
@@ -39,8 +39,6 @@ type ErrorResponse struct {
 	OK      bool
 	Message string
 }
-
-
 
 func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	client := cookies.GetClientFromCookies(r)
@@ -50,7 +48,8 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If an ID is not provided, return all user playlists
 	// Otherwise we get get the specific playlist and all songs
-	playlistId, ok := r.URL.Query()["id"]; if ok != true {
+	playlistId, ok := r.URL.Query()["id"]
+	if ok != true {
 		playlistPage, err := client.CurrentUsersPlaylists()
 		if err != nil {
 			returnJson(w, ErrorResponse{OK: false, Message: err.Error()})
@@ -68,7 +67,6 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-
 
 		returnJson(w, res)
 	}
@@ -135,7 +133,6 @@ func ApiPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	return
 //}
-
 
 func ApiGetUser(w http.ResponseWriter, r *http.Request) {
 	client := cookies.GetClientFromCookies(r)

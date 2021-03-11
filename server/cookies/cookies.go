@@ -1,10 +1,10 @@
 package cookies
 
 import (
-	"net/http"
-	"tagger/spotify_manager"
-	"golang.org/x/oauth2"
 	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
+	"net/http"
+	"tagger/server/spotify_manager"
 )
 
 func GetClientFromCookies(r *http.Request) *spotify.Client {
