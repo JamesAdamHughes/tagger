@@ -84,7 +84,7 @@
 		color: #22313f;
 		border-radius: 10px;
 		margin: 10px 0px;
-		transition: background-color 50ms linear;
+		transition: background-color 75ms linear;
 	}
 
 	.song-item-container:hover {
@@ -270,7 +270,13 @@
             tagCreatedEvent: function(value){
                 this.tagname = value;
                 this.postTrackTag();
-            }
+            },
+	        playTrack: function(songId){
+                this.$http.get('/api/player/queuetrack?id=' + songId).then(function (response) {
+                    console.log(response);
+                    //todo so something in the UI
+                })
+	        }
         }
     });
 
@@ -288,7 +294,7 @@
 
 <script type="text/x-template" id="track-item-template">
     <div class="song-item-container">
-        <div class="song-track-container">
+        <div class="song-track-container" v-on:click="playTrack(track.id)">
 	        <div class="pure-g">
 		        <div class="pure-u-2-5" style="display: flex;">
 			        <img v-bind:src="track.album.images[0].url" width="60">

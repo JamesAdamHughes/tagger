@@ -148,3 +148,38 @@ func ApiGetUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+
+func ApiGetPlayer(w http.ResponseWriter, r *http.Request) {
+	client := cookies.GetClientFromCookies(r)
+	if client == nil {
+		returnJson(w, ErrorResponse{OK: false, Message: "Error getting client"})
+	}
+
+	user, _ := client.CurrentUser()
+
+	returnJson(w, UserResponse{
+		OK:   true,
+		User: user,
+	})
+
+	spotify_manager.GetPlaybackInfo(client)
+}
+
+func ApiPlayerQueueTrack(w http.ResponseWriter, r *http.Request) {
+	client := cookies.GetClientFromCookies(r)
+	if client == nil {
+		returnJson(w, ErrorResponse{OK: false, Message: "Error getting client"})
+	}
+
+	songId, ok := r.URL.Query()["id"]
+
+	fmt.Printf("\n%+v\n", songId)
+
+	if !ok {
+		returnJson(w, ErrorResponse{OK: false, Message: "Missing song ID"})
+	}
+
+	spotify_manager.PlayerQueueTrack(client, songId[0])
+
+	returnJson(w, ErrorResponse{OK: true, Message: "hello"})
+}

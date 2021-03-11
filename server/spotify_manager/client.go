@@ -32,7 +32,7 @@ func init() {
 
 func GetAuthDetails() AuthDetails {
 	return AuthDetails{
-		Auth:  spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate),
+		Auth:  spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadPrivate, spotify.ScopeUserReadPlaybackState, spotify.ScopeUserModifyPlaybackState),
 		State: "abc123",
 	}
 }
