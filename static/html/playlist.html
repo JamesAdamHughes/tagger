@@ -9,13 +9,18 @@
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
     <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css" integrity="sha384-LTIDeidl25h2dPxrB2Ekgc9c7sEC3CWGM6HeFmuDNUjX76Ert4Z4IY714dhZHPLd" crossorigin="anonymous">
+	<script src="https://kit.fontawesome.com/a155bf4a69.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="app">
     <div class="header pure-g pad_20">
-        <div class="pure-u-1-4"><h4>Tagger</h4></div>
-        <div class="pure-u-1-2"></div>
-        <div class="pure-u-1-4"><p>{{ User.display_name }}</p></div>
+        <div class="pure-u-1-5"><h4>Tagger</h4></div>
+        <div class="pure-u-3-5 player-container">
+	        <i class="fas fa-play"></i>
+	        <i class="fas fa-forward"></i>
+	        <i class="fas fa-pause"></i>
+        </div>
+        <div class="pure-u-1-5"><p>{{ User.display_name }}</p></div>
     </div>
 
     <div class="main-container pad_20 pure-g">
@@ -62,7 +67,7 @@
 	}
 
     .header h4 {
-        margin: 0;
+        margin: 1em;
     }
 
     .pad_20 {
