@@ -21,10 +21,10 @@
     <div class="main-container pad_20 pure-g">
         <div class="pure-u-2-5"><h1>{{Playlist.name}}</h1></div>
         <div class="pure-u-3-5">
-            <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
+            <div class="md-double-line" v-if="Playlist.tracks != undefined">
                 <md-subheader>Tracks ({{Playlist.tracks.items.length}})</md-subheader>
                 <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-if="track.track.display" v-bind:tags="getTrackTags(track.track.id)"></track-item>
-            </md-list>
+            </div>
         </div>
     </div>
 
@@ -70,13 +70,35 @@
     }
 
     .header {
-        background-color: #30475e;
+        background-color: #1e8bc3;
         color: white;
     }
 
     .main-container {
 
     }
+
+	.song-item-container {
+		padding: 10px;
+		background-color: #EDEDEE;
+		color: #22313f;
+		border-radius: 10px;
+		margin: 10px 0px;
+		transition: background-color 50ms linear;
+	}
+
+	.song-item-container:hover {
+		background-color: #dedee5;
+	}
+
+	.song-item-container .track-details {
+		padding-left: 10px;
+	}
+
+	.song-track-container img {
+		border-radius: 5px;
+	}
+
 </style>
 
 <script>
@@ -265,18 +287,17 @@
 </script>
 
 <script type="text/x-template" id="track-item-template">
-
-    <div>
-        <md-list-item>
-            <md-icon class="md-primary">music_video</md-icon>
-            <div class="md-list-item-text" style="">
-                <span>{{track.name}}</span>
-                <span>{{artist}}</span>
-            </div>
-        </md-list-item>
-
-        <div style="padding-left: 65px">
-            <song-tags  v-bind:tags="trackTags" @track-tag-add="tagCreatedEvent"></song-tags>
+    <div class="song-item-container">
+        <div class="song-track-container">
+	        <div class="pure-g">
+		        <div class="pure-u-2-5" style="display: flex;">
+			        <img v-bind:src="track.album.images[0].url" width="60">
+			        <div class="track-details">
+				        <div><b>{{track.name}}</b></div>
+				        <div>{{artist}}</div>
+			        </div>
+		        </div>
+	        </div>
         </div>
     </div>
 </script>
