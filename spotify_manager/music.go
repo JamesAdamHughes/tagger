@@ -20,9 +20,8 @@ type SongTagsResponse struct {
 	Tags   []categoriser.Tag
 }
 
-func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*PlaylistResponse, error) {
+func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlistResponse *PlaylistResponse, err error) {
 	user, _ := client.CurrentUser()
-
 	playlist, err := client.GetPlaylist(spotify.ID(playlistID))
 	if err != nil {
 		return nil, err
@@ -31,7 +30,17 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 	currentOffset := 100
 	limit := 100
 
-	redis.Test()
+	// check if the whole playlist response is in redis first, can just return that
+	var keyname = fmt.Sprintf("playlist_song_tags_key_%s", playlistID)
+	r := &PlaylistResponse{}
+	err = redis.Get(keyname, r)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.OK {
+		return r, nil
+	}
 
 	// Make sure we get all songs, as is a limit of 100tracks per response
 	// Loop until all songs retrieved
@@ -57,9 +66,8 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 	scrobblerTagger := categoriser.ScrobblerTagger{}
 	storedTagger := categoriser.StoredTagger{}
 
-	// Get tags for all songs (should be cached)
+	// Get tags for all songs (should be in the DB if not cached)
 	// check if we have stored tags first, otherwise use the scrobbler API
-
 	for _, track := range playlist.Tracks.Tracks {
 		songID := track.Track.ID.String()
 		song := categoriser.Song{ID: songID}
@@ -79,7 +87,6 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 			continue
 		} else {
 			// pull tags from an API then save them to the DB
-
 			songTags, _ := scrobblerTagger.GetSongTags(categoriser.Song{
 				Name:   track.Track.Name,
 				Artist: track.Track.Artists[0].Name,
@@ -103,9 +110,18 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (*Playlis
 		}
 	}
 
-	return &PlaylistResponse{
+	playlistResponse = &PlaylistResponse{
 		OK:           true,
 		Playlist:     *playlist,
 		PlaylistTags: playlistSongTags,
-	}, nil
+	}
+
+	// cache result in redis
+	err = redis.Set(keyname, &playlistResponse, 60*60)
+	if err != nil {
+		fmt.Printf("\nis that this error?\n")
+		return nil, err
+	}
+
+	return playlistResponse, nil
 }
