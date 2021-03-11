@@ -13,13 +13,13 @@
 <body>
 <div id="app">
     <div class="header pure-g pad_20">
-        <div class="pure-u-1-4"><h1>Taggr</h1></div>
+        <div class="pure-u-1-4"><h4>Tagger</h4></div>
         <div class="pure-u-1-2"></div>
         <div class="pure-u-1-4"><p>{{ User.display_name }}</p></div>
     </div>
 
-    <div class="main-container pure-g">
-        <div class="pure-u-2-5"><h1>Taggr</h1></div>
+    <div class="main-container pad_20 pure-g">
+        <div class="pure-u-2-5"><h1>{{Playlist.name}}</h1></div>
         <div class="pure-u-3-5">
             <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
                 <md-subheader>Tracks ({{Playlist.tracks.items.length}})</md-subheader>
@@ -28,13 +28,6 @@
         </div>
     </div>
 
-    <br/>
-    {{ message }}
-    <md-toolbar :md-elevation="1">
-        <span class="md-title">
-        {{Playlist.name}}
-        </span>
-    </md-toolbar>
     <form v-on:submit.prevent="onSearchSubmit">
         <md-autocomplete v-model="SearchTag" :md-options="uniquePlaylistTags" :md-open-on-focus="false" md-layout="box" md-dense>
             <label>Tags</label>
@@ -52,6 +45,26 @@
 <script src="https://unpkg.com/vue-material@beta"></script>
 
 <style>
+	h1 {
+		font-size: 40px;
+	}
+
+	h2 {
+		font-size: 36px;
+	}
+
+	h3 {
+		font-size: 28px;
+	}
+
+	h4 {
+		font-size: 22px;
+	}
+
+    .header h4 {
+        margin: 0;
+    }
+
     .pad_20 {
         padding: 20px;
     }
@@ -166,6 +179,10 @@
             uniquePlaylistTags: function () {
                 var filteredTags = [];
 
+                if (this.PlaylistTags.length === 0) {
+                    return filteredTags;
+                }
+
                 Object.entries(this.PlaylistTags).forEach(([songId, songTags]) => {
                     songTags.Tags.forEach(function (tag) {
                         var added = false;
@@ -267,7 +284,7 @@
 <script type="text/x-template" id="song-tags-template">
     <md-chips class="md-primary" v-model="tags" md-placeholder="Add tags..." md-check-duplicated v-on:md-insert="addNewTag($event)">
         <template slot="md-chip" slot-scope="{ chip }">
-        {{ chip.Name }} <small v-if="chip === 1">(Marcos Moura)</small>
+        {{ chip.Name }}
         </template>
         <label>Tags</label>
     </md-chips>
