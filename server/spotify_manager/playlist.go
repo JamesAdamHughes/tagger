@@ -3,8 +3,6 @@ package spotify_manager
 import (
 	"fmt"
 	"tagger/server/categoriser"
-
-	//"tagger/server"
 	"tagger/server/redis"
 
 	"github.com/zmb3/spotify"
@@ -13,7 +11,7 @@ import (
 type PlaylistResponse struct {
 	OK           bool
 	Playlist     spotify.FullPlaylist
-	PlaylistTags []SongTagsResponse
+	PlaylistTags map[string]SongTagsResponse
 }
 
 type SongTagsResponse struct {
@@ -64,7 +62,7 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 		currentOffset += 100
 	}
 
-	playlistSongTags := []SongTagsResponse{}
+	playlistSongTags := make(map[string]SongTagsResponse)
 	scrobblerTagger := categoriser.ScrobblerTagger{}
 	storedTagger := categoriser.StoredTagger{}
 
@@ -76,16 +74,12 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 
 		tags, err := storedTagger.GetSongTags(song, user.ID)
 		if err == nil && len(tags) > 0 {
-
 			fmt.Printf("\nDATABASE Song: %s, tags: %+v", track.Track.Name, tags)
-
-			// no error and got tags back, return that
-			// do nothing - get from the api
-			playlistSongTags = append(playlistSongTags, SongTagsResponse{
+			playlistSongTags[songID] = SongTagsResponse{
 				SongId: songID,
 				UserId: user.ID,
 				Tags:   tags,
-			})
+			}
 			continue
 		} else {
 			// pull tags from an API then save them to the DB
@@ -97,14 +91,13 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 			fmt.Printf("\n SCROBBLER Song: %s, tags: %+v", track.Track.Name, songTags)
 
 			if len(songTags) > 0 {
-				playlistSongTags = append(playlistSongTags, SongTagsResponse{
-					SongId: track.Track.ID.String(),
+				playlistSongTags[songID] = SongTagsResponse{
+					SongId: songID,
 					UserId: user.ID,
-					Tags:   songTags,
-				})
+					Tags:   tags,
+				}
 
 				for _, t := range songTags {
-					fmt.Printf("\nSaving this tag boy %+v\n", t.Name)
 					storedTagger.SaveSongTags(song, user.ID, t.Name)
 				}
 			}
@@ -121,7 +114,6 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 	// cache result in redis
 	err = redis.Set(keyname, &playlistResponse, 60*60)
 	if err != nil {
-		fmt.Printf("\nis that this error?\n")
 		return nil, err
 	}
 
