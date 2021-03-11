@@ -8,13 +8,26 @@
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons">
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css" integrity="sha384-LTIDeidl25h2dPxrB2Ekgc9c7sEC3CWGM6HeFmuDNUjX76Ert4Z4IY714dhZHPLd" crossorigin="anonymous">
 </head>
 <body>
-<div id="app" style="padding: 20px">
-    <div>
-
+<div id="app">
+    <div class="header pure-g pad_20">
+        <div class="pure-u-1-4"><h1>Taggr</h1></div>
+        <div class="pure-u-1-2"></div>
+        <div class="pure-u-1-4"><p>{{ User.display_name }}</p></div>
     </div>
-    {{ User.display_name }}
+
+    <div class="main-container pure-g">
+        <div class="pure-u-2-5"><h1>Taggr</h1></div>
+        <div class="pure-u-3-5">
+            <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
+                <md-subheader>Tracks ({{Playlist.tracks.items.length}})</md-subheader>
+                <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-if="track.track.display" v-bind:tags="getTrackTags(track.track.id)"></track-item>
+            </md-list>
+        </div>
+    </div>
+
     <br/>
     {{ message }}
     <md-toolbar :md-elevation="1">
@@ -35,12 +48,23 @@
     </md-chips>
 
 
-    <md-list class="md-double-line" v-if="Playlist.tracks != undefined">
-        <md-subheader>Tracks ({{Playlist.tracks.total}})</md-subheader>
-        <track-item v-for="track in Playlist.tracks.items" v-bind:track="track.track" v-if="track.track.display" v-bind:tags="getTrackTags(track.track.id)"></track-item>
-    </md-list>
 </div>
 <script src="https://unpkg.com/vue-material@beta"></script>
+
+<style>
+    .pad_20 {
+        padding: 20px;
+    }
+
+    .header {
+        background-color: #30475e;
+        color: white;
+    }
+
+    .main-container {
+
+    }
+</style>
 
 <script>
     Vue.use(VueMaterial.default);
@@ -82,14 +106,11 @@
             });
         },
         methods: {
-            getTrackTags : function(id) {
-                returned = this.PlaylistTags.filter(function(tagList){
-                    return tagList.SongId === id && tagList.Tags !== null;
-                });
-                if (returned.length > 0) {
-                    return returned[0].Tags
+            getTrackTags : function(songId) {
+                if(this.PlaylistTags[songId]) {
+                    return this.PlaylistTags[songId].Tags;
                 }
-                return []
+                return [];
             },
             selectTag: function(tag){
                 this.SearchTags.push(tag);
@@ -142,26 +163,27 @@
             }
         },
         computed: {
-            uniquePlaylistTags: function(){
+            uniquePlaylistTags: function () {
                 var filteredTags = [];
 
-                this.PlaylistTags.forEach(function(songTags){
-                    songTags.Tags.forEach(function(tag){
+                Object.entries(this.PlaylistTags).forEach(([songId, songTags]) => {
+                    songTags.Tags.forEach(function (tag) {
                         var added = false;
-                        filteredTags.forEach(function(ft){
-                            if (ft.name === tag.TagName) {
+                        filteredTags.forEach(function (ft) {
+                            if (ft.name === tag.name) {
                                 ft.count += 1;
                                 added = true;
                             }
                         });
                         if (!added) {
-                            filteredTags.push({name: tag.TagName, count: 1})
+                            filteredTags.push({name: tag.Name, count: 1})
                         }
                     })
                 });
 
-                filteredTags.sort(function(a,b) {return (a.count > b.count) ? -1 : ((b.count > a.count) ? 1 : 0);} );
-
+                filteredTags.sort(function (a, b) {
+                    return (a.count > b.count) ? -1 : ((b.count > a.count) ? 1 : 0);
+                });
                 return filteredTags
             }
         }
