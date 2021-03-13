@@ -22,13 +22,6 @@ type SongTagsResponse struct {
 
 func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlistResponse *PlaylistResponse, err error) {
 	user, _ := client.CurrentUser()
-	playlist, err := client.GetPlaylist(spotify.ID(playlistID))
-	if err != nil {
-		return nil, err
-	}
-
-	currentOffset := 100
-	limit := 100
 
 	// check if the whole playlist response is in redis first, can just return that
 	var keyname = fmt.Sprintf("playlist_song_tags_key_%s", playlistID)
@@ -40,27 +33,12 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 
 	if r.OK {
 		fmt.Printf("\nRedis won lads\n")
-		return r, nil
+		// return r, nil
 	}
 
-	// Make sure we get all songs, as is a limit of 100tracks per response
-	// Loop until all songs retrieved
-	for len(playlist.Tracks.Tracks) < playlist.Tracks.Total {
-
-		options := &spotify.Options{
-			Limit:  &limit,
-			Offset: &currentOffset,
-		}
-
-		restOfPlaylist, err := client.GetPlaylistTracksOpt(spotify.ID(playlistID), options, "")
-		if err != nil {
-			fmt.Printf("\n\n error %+v", err)
-		}
-
-		// Add to the end of the tracks array
-		playlist.Tracks.Tracks = append(playlist.Tracks.Tracks, restOfPlaylist.Tracks...)
-
-		currentOffset += 100
+	playlist, err := getSpotifyPlaylist(client, playlistID)
+	if err != nil {
+		return nil, err
 	}
 
 	playlistSongTags := make(map[string]SongTagsResponse)
@@ -139,4 +117,36 @@ func getSongTagsWorker(tagsChannel chan SongTagsResponse, song categoriser.Song,
 	for _, t := range songTags {
 		storedTagger.SaveSongTags(songTagResponse.SongId, userID, t.Name)
 	}
+}
+
+func getSpotifyPlaylist(client *spotify.Client, playlistID string) (*spotify.FullPlaylist, error) {
+	playlist, err := client.GetPlaylist(spotify.ID(playlistID))
+	if err != nil {
+		return nil, err
+	}
+
+	currentOffset := 100
+	limit := 100
+
+	// Make sure we get all songs from spotify, as is a limit of 100tracks per response
+	// Loop until all songs retrieved
+	for len(playlist.Tracks.Tracks) < playlist.Tracks.Total {
+
+		options := &spotify.Options{
+			Limit:  &limit,
+			Offset: &currentOffset,
+		}
+
+		restOfPlaylist, err := client.GetPlaylistTracksOpt(spotify.ID(playlistID), options, "")
+		if err != nil {
+			fmt.Printf("\n\n error %+v", err)
+		}
+
+		// Add to the end of the tracks array
+		playlist.Tracks.Tracks = append(playlist.Tracks.Tracks, restOfPlaylist.Tracks...)
+
+		currentOffset += 100
+	}
+
+	return playlist, nil
 }
