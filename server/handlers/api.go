@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/zmb3/spotify"
 	"net/http"
 	"tagger/server/cookies"
 	"tagger/server/spotify_manager"
+
+	"github.com/zmb3/spotify"
 )
 
 type PlaylistsResponse struct {
@@ -182,4 +183,32 @@ func ApiPlayerQueueTrack(w http.ResponseWriter, r *http.Request) {
 	spotify_manager.PlayerQueueTrack(client, songId[0])
 
 	returnJson(w, ErrorResponse{OK: true, Message: "hello"})
+}
+
+func ApiPlayerPlay(w http.ResponseWriter, r *http.Request) {
+	client := cookies.GetClientFromCookies(r)
+	if client == nil {
+		returnJson(w, ErrorResponse{OK: false, Message: "Error getting client"})
+	}
+
+	err := spotify_manager.PlayerResume(client)
+	if err != nil {
+		returnJson(w, ErrorResponse{OK: false, Message: err.Error()})
+	}
+
+	returnJson(w, ErrorResponse{OK: true})
+}
+
+func ApiPlayerPause(w http.ResponseWriter, r *http.Request) {
+	client := cookies.GetClientFromCookies(r)
+	if client == nil {
+		returnJson(w, ErrorResponse{OK: false, Message: "Error getting client"})
+	}
+
+	err := spotify_manager.PlayerPause(client)
+	if err != nil {
+		returnJson(w, ErrorResponse{OK: false, Message: err.Error()})
+	}
+
+	returnJson(w, ErrorResponse{OK: true})
 }

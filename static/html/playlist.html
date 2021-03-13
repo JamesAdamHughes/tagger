@@ -16,9 +16,9 @@
     <div class="header pure-g pad_20">
         <div class="pure-u-1-5"><h4>Tagger</h4></div>
         <div class="pure-u-3-5 player-container">
-	        <i class="fas fa-play"></i>
+	        <i class="fas fa-play" v-on:click="playerPlay()"></i>
 	        <i class="fas fa-forward"></i>
-	        <i class="fas fa-pause"></i>
+	        <i class="fas fa-pause" v-on:click="playerPause()"></i>
         </div>
         <div class="pure-u-1-5"><p>{{ User.display_name }}</p></div>
     </div>
@@ -200,6 +200,18 @@
                         track.track.display = true;
                     }
                 });
+            },
+            playerPlay: function(){
+                this.$http.get('/api/player/play').then(function(response) {
+                    console.log(response);
+                    // get body data
+                });
+            },
+            playerPause: function(){
+                this.$http.get('/api/player/pause').then(function(response) {
+                    console.log(response);
+                    // get body data
+                });
             }
         },
         computed: {
@@ -211,6 +223,9 @@
                 }
 
                 Object.entries(this.PlaylistTags).forEach(([songId, songTags]) => {
+                    if (!songTags.Tags) {
+                        return;
+                    }
                     songTags.Tags.forEach(function (tag) {
                         var added = false;
                         filteredTags.forEach(function (ft) {

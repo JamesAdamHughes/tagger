@@ -25,6 +25,8 @@ func StartServer() {
 	http.HandleFunc("/api/user", handlers.ApiGetUser)
 	http.HandleFunc("/api/player", handlers.ApiGetPlayer)
 	http.HandleFunc("/api/player/queuetrack", handlers.ApiPlayerQueueTrack)
+	http.HandleFunc("/api/player/play", handlers.ApiPlayerPlay)
+	http.HandleFunc("/api/player/pause", handlers.ApiPlayerPause)
 
 	//http.HandleFunc("/api/track/tag", handlers.ApiSongTagHandler)
 

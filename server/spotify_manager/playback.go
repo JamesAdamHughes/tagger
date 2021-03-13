@@ -2,6 +2,7 @@ package spotify_manager
 
 import (
 	"fmt"
+
 	"github.com/zmb3/spotify"
 )
 
@@ -16,4 +17,12 @@ func GetPlaybackInfo(client *spotify.Client) {
 
 func PlayerQueueTrack(client *spotify.Client, songId string) error {
 	return client.QueueSong(spotify.ID(songId))
+}
+
+func PlayerResume(client *spotify.Client) error {
+	return client.Play()
+}
+
+func PlayerPause(client *spotify.Client) error {
+	return client.Pause()
 }
