@@ -42,13 +42,10 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 	}
 
 	playlistSongTags := make(map[string]SongTagsResponse)
-	storedTagger := categoriser.StoredTagger{}
-
 	tagChan := make(chan SongTagsResponse)
-	var counter int
+	var jobCounter int
 
-	// Get tags for all songs (should be in the DB if not cached)
-	// check if we have stored tags first, otherwise use the scrobbler API
+	// Get tags for all songs using go routines for speed
 	for _, track := range playlist.Tracks.Tracks {
 		songID := track.Track.ID.String()
 		song := categoriser.Song{
@@ -57,27 +54,11 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 			ID:     songID,
 		}
 
-		// todo this could be async as well - it's acutally slower to do all the DB ops 1 by 1 than get from api
-		tags, err := storedTagger.GetSongTags(song, user.ID)
-		if err == nil && len(tags) > 0 {
-			fmt.Printf("\nDATABASE Song: %s, tags: %+v", track.Track.Name, tags)
-			playlistSongTags[songID] = SongTagsResponse{
-				SongId: songID,
-				UserId: user.ID,
-				Tags:   tags,
-			}
-			continue
-		} else {
-			// pull tags from an API then save them to the DB
-			// get all the song data from API concurrently for massive speedup
-			fmt.Printf("\n SCROBBLER Song: %s, tags: %+v", track.Track.Name)
-			go getSongTagsWorker(tagChan, song, user.ID)
-			counter++
-
-		}
+		go getSavedSongTagsWorker(tagChan, song, user.ID)
+		jobCounter++
 	}
 
-	for j := 1; j <= counter; j++ {
+	for j := 1; j <= jobCounter; j++ {
 		songTagResponse := <-tagChan
 		playlistSongTags[songTagResponse.SongId] = songTagResponse
 		fmt.Printf("done with song %s\n", songTagResponse.SongId)
@@ -99,13 +80,23 @@ func FetchSongsFromPlaylist(client *spotify.Client, playlistID string) (playlist
 	return playlistResponse, nil
 }
 
-func getSongTagsWorker(tagsChannel chan SongTagsResponse, song categoriser.Song, userID string) {
+// getSavedSongTagsWorker Get tags for all songs (should be in the DB if not cached)
+// check if we have stored tags first, otherwise use the scrobbler API
+func getSavedSongTagsWorker(tagsChannel chan SongTagsResponse, song categoriser.Song, userID string) {
 	scrobblerTagger := categoriser.ScrobblerTagger{}
 	storedTagger := categoriser.StoredTagger{}
 
-	// pull tags from an API then save them to the DB
-	songTags, _ := scrobblerTagger.GetSongTags(song, "0")
-	fmt.Printf("in worker for song %s %s\n", song.Name, song.ID)
+	// first check if in the db, then go to scribbler
+	songTags, err := storedTagger.GetSongTags(song, userID)
+	inDB := true
+	if err == nil && len(songTags) == 0 {
+		fmt.Printf("in  saved  worker was NOT IN DB for song %s %s\n", song.Name, song.ID)
+		inDB = false
+		songTags, _ = scrobblerTagger.GetSongTags(song, "0")
+	}
+
+	// pull tags from database then save them to the DB
+	fmt.Printf("in  saved  worker for song %s %s\n", song.Name, song.ID)
 	var songTagResponse = SongTagsResponse{
 		SongId: song.ID,
 		Tags:   songTags,
@@ -114,8 +105,10 @@ func getSongTagsWorker(tagsChannel chan SongTagsResponse, song categoriser.Song,
 	tagsChannel <- songTagResponse
 
 	// run the DB operation after sending the response back, as we don't need to block on this. Rather return to user faster
-	for _, t := range songTags {
-		storedTagger.SaveSongTags(songTagResponse.SongId, userID, t.Name)
+	if !inDB {
+		for _, t := range songTags {
+			storedTagger.SaveSongTags(songTagResponse.SongId, userID, t.Name)
+		}
 	}
 }
 
