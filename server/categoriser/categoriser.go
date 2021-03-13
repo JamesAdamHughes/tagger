@@ -35,7 +35,7 @@ type lastFmTag struct {
 
 type Tagger interface {
 	GetSongTags(song Song, userId string) (tags []Tag, err error)
-	SaveSongTags(song Song, userId string, tagName string) (err error)
+	SaveSongTags(songId string, userId string, tagName string) (err error)
 }
 
 type ScrobblerTagger struct{}
@@ -61,7 +61,7 @@ func (gt ScrobblerTagger) GetSongTags(song Song, userId string) (tags []Tag, err
 		panic(err)
 	}
 
-	log.Println(lastfmResponse)
+	// log.Println(lastfmResponse)
 
 	for idx, tag := range lastfmResponse.topTags.Tag {
 		if idx > 4 {
@@ -76,7 +76,7 @@ func (gt ScrobblerTagger) GetSongTags(song Song, userId string) (tags []Tag, err
 	return tags, nil
 }
 
-func (gt ScrobblerTagger) SaveSongTags(song Song, userId string, tagName string) (err error) {
+func (gt ScrobblerTagger) SaveSongTags(songId string, userId string, tagName string) (err error) {
 	return nil
 }
 
@@ -97,8 +97,8 @@ func (st StoredTagger) GetSongTags(song Song, userId string) (tags []Tag, err er
 	return tags, nil
 }
 
-func (st StoredTagger) SaveSongTags(song Song, userId string, tagName string) (err error) {
-	r := AddSongTagRequest{SongId: song.ID, UserId: userId, TagName: tagName}
+func (st StoredTagger) SaveSongTags(songId string, userId string, tagName string) (err error) {
+	r := AddSongTagRequest{SongId: songId, UserId: userId, TagName: tagName}
 	err = AddPlaylistSongTag(r)
 	if err != nil {
 		return err
