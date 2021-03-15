@@ -1,4 +1,5 @@
-FROM golang:1.16
+FROM golang:1.16-alpine
+RUN apk add build-base
 
 COPY air.toml /etc/
 
