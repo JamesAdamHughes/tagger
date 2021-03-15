@@ -4,6 +4,7 @@ RUN apk add build-base
 ENV PORT=8081
 ENV DBNAME=tagger_db_dev_01
 ENV REDIS_PORT=6379
+ENV REDIS_DOMAIN="redis.service.local"
 
 # copy the code rather than using volume for production
 RUN mkdir /go/src/tagger

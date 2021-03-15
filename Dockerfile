@@ -4,6 +4,7 @@ RUN apk add build-base
 COPY air.toml /etc/
 
 ENV BASE_URL="http://localhost"
+ENV REDIS_DOMAIN="redis"
 
 RUN go get -u -v github.com/cosmtrek/air
 

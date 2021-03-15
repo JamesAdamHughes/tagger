@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"os"
 	"reflect"
 	"time"
 )
@@ -14,10 +15,12 @@ import (
 var redisClient *redis.Client
 
 func init() {
-	fmt.Printf("init connection to redis....\n")
+	redisAddr := os.Getenv("REDIS_DOMAIN")
+
+	fmt.Printf("init connection to redis domain: %s ....\n", fmt.Sprintf("%s:6379", redisAddr))
 
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     fmt.Sprintf("%s:6379", redisAddr),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
