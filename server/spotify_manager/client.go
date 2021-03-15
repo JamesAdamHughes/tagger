@@ -28,13 +28,15 @@ type Client spotify.Client
 func init() {
 	os.Setenv("SPOTIFY_ID", "f346f777add648db9f09e7c6ddf87f34")
 	os.Setenv("SPOTIFY_SECRET", "1b5bd7bd2e084a178e77e24cf4940f21")
-	baseUrl := os.Getenv("ENV BASE_URL")
+	baseUrl := os.Getenv("BASE_URL")
 
 	if strings.Contains(baseUrl, "localhost") {
 		redirectURI = fmt.Sprintf("%s:%s/callback", baseUrl, os.Getenv("PORT"))
 	} else {
 		redirectURI = fmt.Sprintf("%s/callback", baseUrl)
 	}
+
+	fmt.Printf("\nbase URL is %+v\n", baseUrl)
 }
 
 func GetAuthDetails() AuthDetails {
