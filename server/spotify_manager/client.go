@@ -5,6 +5,7 @@ import (
 	"github.com/zmb3/spotify"
 	"log"
 	"net/http"
+	"strings"
 
 	"golang.org/x/oauth2"
 	"os"
@@ -27,7 +28,13 @@ type Client spotify.Client
 func init() {
 	os.Setenv("SPOTIFY_ID", "f346f777add648db9f09e7c6ddf87f34")
 	os.Setenv("SPOTIFY_SECRET", "1b5bd7bd2e084a178e77e24cf4940f21")
-	redirectURI = fmt.Sprintf("http://localhost:%s/callback", os.Getenv("PORT"))
+	baseUrl := os.Getenv("ENV BASE_URL")
+
+	if strings.Contains(baseUrl, "localhost") {
+		redirectURI = fmt.Sprintf("%s:%s/callback", baseUrl, os.Getenv("PORT"))
+	} else {
+		redirectURI = fmt.Sprintf("%s/callback", baseUrl)
+	}
 }
 
 func GetAuthDetails() AuthDetails {

@@ -1,6 +1,10 @@
 FROM golang:1.16-alpine
 RUN apk add build-base
 
+ENV PORT=8081
+ENV DBNAME=tagger_db_dev_01
+ENV REDIS_PORT=6379
+
 # copy the code rather than using volume for production
 RUN mkdir /go/src/tagger
 COPY ./ /go/src/tagger

@@ -30,9 +30,5 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "8081:8081"
-    environment:
-      - PORT=8081
-      - DBNAME=tagger_db_dev_01
-      - REDIS_PORT=6379
     links:
       - redis

@@ -2,6 +2,8 @@ FROM golang:1.16
 
 COPY air.toml /etc/
 
+ENV BASE_URL="http://localhost"
+
 RUN go get -u -v github.com/cosmtrek/air
 
 WORKDIR /go/src/tagger
