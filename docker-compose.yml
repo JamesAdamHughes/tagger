@@ -9,6 +9,7 @@ services:
       - redis
     build:
       context: .
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
@@ -21,4 +22,17 @@ services:
       - redis
     stdin_open: true # docker run -i
     tty: true        # docker run -t
-
+  api_prod:
+    depends_on:
+      - redis
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - DBNAME=tagger_db_dev_01
+      - REDIS_PORT=6379
+    links:
+      - redis

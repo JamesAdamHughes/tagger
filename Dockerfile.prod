@@ -1,0 +1,19 @@
+FROM golang:1.16-alpine
+RUN apk add build-base
+
+# COPY air.toml /etc/
+
+# copy the code rather than using volume for production
+RUN mkdir /go/src/tagger
+COPY ./ /go/src/tagger
+
+# RUN go get -u -v github.com/cosmtrek/air
+
+WORKDIR /go/src/tagger
+
+RUN go mod tidy
+RUN go mod download
+
+RUN go install
+CMD ["tagger"]
+# CMD /go/bin/air -c /etc/air.toml
